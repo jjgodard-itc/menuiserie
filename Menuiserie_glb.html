@@ -62,7 +62,8 @@
 
   <canvas id="renderCanvas"></canvas>
 
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+ <!-- <script src="https://cdn.babylonjs.com/babylon.js"></script> -->
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
   <script>
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true);
@@ -97,15 +98,22 @@
     };
 
     // Charger le modèle GLB
-    BABYLON.SceneLoader.ImportMesh("*", "./", "Menuiserie.glb", scene, function (meshes) {
-      meshes.forEach(function(mesh) {
-        mesh.position = BABYLON.Vector3.Zero();  // Positionner le mesh à l'origine
-        mesh.scaling = new BABYLON.Vector3(1, 1, 1);  // Adapter l'échelle si nécessaire
-        mesh.receiveShadows = true;
-      });
+    BABYLON.SceneLoader.ImportMesh(
+  null,
+  "https://jjgodard-itc.github.io/menuiserie/",
+  "Menuiserie.glb",
+  scene,
+  function (meshes) {
+    console.log("GLB chargé :", meshes);
+  },
+  null,
+  function (scene, message) {
+    console.error("Erreur de chargement :", message);
+  }
+
 
       // Optionnel : ajuster la caméra pour mieux voir le modèle
-      scene.createDefaultCameraOrLight(true, true, true);
+     // scene.createDefaultCameraOrLight(true, true, true);
     });
 
     // Le reste du code de votre projet pour la création des éléments de menuiserie...
