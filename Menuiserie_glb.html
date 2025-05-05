@@ -178,7 +178,7 @@
         if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
           mesh.scaling.x = scaleX;
          if(mesh.name.includes("Haut")){
-          mesh.positoin.x = (userWidth / baseWidth)/1000;
+          mesh.positoin.x = (effectiveHeight - baseHeight)/1000;
         }
         }
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
