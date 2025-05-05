@@ -22,50 +22,7 @@
   <div id="ui">
     <label>Largeur (mm): <input type="number" id="width" value="1200"></label>
     <label>Hauteur (mm): <input type="number" id="height" value="2150"></label>
-
-    <label>Ajouter allège :
-      <input type="checkbox" id="addAllege">
-    </label>
-    <div id="allegeHeightSection" style="display: none;">
-      <label>Hauteur allège (mm) : <input type="number" id="allegeHeight" value="300"></label>
-    </div>
-
-    <label>Ajouter imposte :
-      <input type="checkbox" id="addImposte">
-    </label>
-    <div id="imposteHeightSection" style="display: none;">
-      <label>Hauteur imposte (mm) : <input type="number" id="imposteHeight" value="300"></label>
-    </div>
-
-    <label>Nombre de vantaux :
-      <select id="vantaux">
-        <option value="1">1</option>
-        <option value="2" selected>2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
-    </label>
-
-    <label>Couleur :
-      <select id="couleur">
-        <option value="Ral 1015">Ral 1015</option>
-        <option value="Ral 3004" selected>Ral 3004</option>
-        <option value="Ral 5014">Ral 5014</option>
-        <option value="Ral 6019">Ral 6019</option>
-        <option value="Ral 7016">Ral 7016</option>
-        <option value="Ral 9005">Ral 9005</option>
-        <option value="Ral 9010">Ral 9010</option>
-      </select>
-    </label>
-
-    <label>Ajouter vitrage :
-      <input type="checkbox" id="vitrage" checked>
-    </label>
-
-    <label><button id="toggleVantaux">Ouvrir les ouvrants</button></label>
-    <label><button id="updateBtn">Mettre à jour</button></label>
   </div>
-
   <canvas id="renderCanvas"></canvas>
 
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -79,45 +36,25 @@
 
     const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 3 + Math.PI, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
+
     camera.wheelPrecision = 20;
     camera.lowerRadiusLimit = 1.5;
     camera.upperRadiusLimit = 20;
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+    light.intensity = 1.5;
+
     const directionalLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
+    directionalLight.intensity = 0.7;
 
-    const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight);
-    shadowGenerator.useExponentialShadowMap = true;
-
-    const ralColors = {
-      "Ral 1015": new BABYLON.Color3.FromHexString("#FBE8A6"),
-      "Ral 3004": new BABYLON.Color3.FromHexString("#641C34"),
-      "Ral 5014": new BABYLON.Color3.FromHexString("#5B6470"),
-      "Ral 6019": new BABYLON.Color3.FromHexString("#5D8C45"),
-      "Ral 7016": new BABYLON.Color3.FromHexString("#383E42"),
-      "Ral 9005": new BABYLON.Color3.FromHexString("#0A0A0A"),
-      "Ral 9010": new BABYLON.Color3.FromHexString("#FFFFFF")
-    };
-
-    let loadedMeshes = [];
-
-    // Affichage dynamique
-    document.getElementById("addAllege").addEventListener("change", function () {
-      document.getElementById("allegeHeightSection").style.display = this.checked ? "block" : "none";
-    });
-    document.getElementById("addImposte").addEventListener("change", function () {
-      document.getElementById("imposteHeightSection").style.display = this.checked ? "block" : "none";
-    });
-
-    // Charger le modèle
     BABYLON.SceneLoader.ImportMesh(
       null,
       "https://jjgodard-itc.github.io/menuiserie/",
       "Menuiserie.glb",
       scene,
       function (meshes) {
-        loadedMeshes = meshes;
-        applyColor();
+        console.log("GLB chargé :", meshes);
+        updateModel(); // Créer le modèle une fois les meshes chargés
       },
       null,
       function (scene, message) {
@@ -125,80 +62,111 @@
       }
     );
 
-    // Appliquer couleur
-    function applyColor() {
-      const color = ralColors[document.getElementById("couleur").value];
-      loadedMeshes.forEach(mesh => {
-        if (mesh.material) {
-          const mat = mesh.material.clone(mesh.name + "_mat");
-          if (mat.diffuseColor) mat.diffuseColor = color;
-          mesh.material = mat;
-        }
-      });
-    }
-
-    document.getElementById("couleur").addEventListener("change", applyColor);
-
-    // Animation d'ouverture
-    document.getElementById("toggleVantaux").addEventListener("click", () => {
-      const vantail = scene.getMeshByName("Vantail_1");
-      if (vantail) {
-        BABYLON.Animation.CreateAndStartAnimation(
-          "openVantail",
-          vantail,
-          "rotation.y",
-          30,
-          60,
-          0,
-          Math.PI / 2,
-          0
-        );
-      }
-    });
-
-    // Mise à jour dimensions (exemple simplifié)
     function updateModel() {
-  const userWidth = parseFloat(document.getElementById("width").value);
-  const userHeight = parseFloat(document.getElementById("height").value);
-  const addAllege = document.getElementById("addAllege").checked;
-  const addImposte = document.getElementById("addImposte").checked;
-  const allegeHeight = parseFloat(document.getElementById("allegeHeight").value) || 0;
-  const imposteHeight = parseFloat(document.getElementById("imposteHeight").value) || 0;
+      const width = parseFloat(document.getElementById("width").value);
+      const height = parseFloat(document.getElementById("height").value);
 
-  const baseWidth = 1000;
-  const baseHeight = 1000;
+      // Supprimer anciens éléments
+      const oldTop = scene.getTransformNodeByName("Haut");
+      if (oldTop) oldTop.dispose();
 
-  // Hauteur utile hors allège et imposte
-  const effectiveHeight = userHeight - (addAllege ? allegeHeight : 0) - (addImposte ? imposteHeight : 0);
+      const oldBot = scene.getTransformNodeByName("Bas");
+      if (oldBot) oldBot.dispose();
 
-  const scaleX = userWidth / baseWidth;
-  const scaleY = effectiveHeight / baseHeight;
+      const oldLeft = scene.getTransformNodeByName("Gauche");
+      if (oldLeft) oldLeft.dispose();
 
-      loadedMeshes.forEach(mesh => {
-        if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
-          mesh.scaling.x = scaleX;
-         if(mesh.name.includes("Haut")){
-          mesh.position.z = -(effectiveHeight - baseHeight)/1000;
-        }
-        }
-        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          mesh.scaling.z = scaleY;
-          if(mesh.name.includes("Droite")){
-          mesh.position.x = -(userWidth - baseWidth)/1000;
-        }
-        }
-        if (mesh.name.includes("Allege")) {
-          mesh.setEnabled(addAllege);
-        }
-        if (mesh.name.includes("Imposte")) {
-          mesh.setEnabled(addImposte);
-        }
-      });
+      const oldRight = scene.getTransformNodeByName("Droit");
+      if (oldRight) oldRight.dispose();
+
+      // Créer les traverses
+      const top = createTraverseHorizontale(width);
+      top.name = "Haut";
+      top.position.y = height / 2 - 25;
+
+      const bot = createTraverseHorizontale(width);
+      bot.name = "Bas";
+      bot.position.y = -height / 2 + 25;
+
+      // Créer les montants
+      const left = createMontantVertical(height);
+      left.name = "Gauche";
+      left.position.x = -width / 2 + 25; // Décalage à gauche
+
+      const right = createMontantVertical(height);
+      right.name = "Droit";
+      right.position.x = width / 2 - 25; // Décalage à droite
     }
 
+    function createTraverseHorizontale(width) {
+      const container = new BABYLON.TransformNode("TraverseContainer", scene);
 
+      const extG = scene.getMeshByName("Traverse_Ext_G");
+      const extD = scene.getMeshByName("Traverse_Ext_D");
+      const segment = scene.getMeshByName("Traverse_Segment");
 
-    document.getElementById("updateBtn").addEventListener("click", updateModel);
+      if (!extG || !extD || !segment) {
+        console.error("Composants de traverse non trouvés");
+        return container;
+      }
+
+      const extSize = 50; // Largeur des extrémités
+      const segSize = 100; // Longueur d’un segment
+
+      const nbSegments = Math.floor((width - 2 * extSize) / segSize);
+      const remainder = (width - 2 * extSize) - nbSegments * segSize;
+      const startX = -width / 2 + extSize;
+
+      // Cloner extrémité gauche
+      const eg = extG.clone("EG");
+      eg.parent = container;
+      eg.position.x = -width / 2 + extSize / 2;
+
+      // Cloner extrémité droite
+      const ed = extD.clone("ED");
+      ed.parent = container;
+      ed.position.x = width / 2 - extSize / 2;
+
+      // Cloner segments répétés
+      for (let i = 0; i < nbSegments; i++) {
+        const s = segment.clone("Segment_" + i);
+        s.parent = container;
+        s.position.x = startX + i * segSize + segSize / 2;
+      }
+
+      // Segment final ajusté (si reste)
+      if (remainder > 1) {
+        const last = segment.clone("Segment_reste");
+        last.parent = container;
+        last.position.x = startX + nbSegments * segSize + remainder / 2;
+        last.scaling.x = remainder / segSize; // Optionnel
+      }
+
+      return container;
+    }
+
+    // Fonction pour créer un montant vertical
+    function createMontantVertical(height) {
+      const container = new BABYLON.TransformNode("MontantContainer", scene);
+
+      const montant = scene.getMeshByName("Traverse_Segment"); // On utilise le même modèle pour les montants
+
+      if (!montant) {
+        console.error("Modèle de montant non trouvé dans le GLB");
+        return container;
+      }
+
+      const montantClone = montant.clone("MontantClone");
+      montantClone.parent = container;
+      montantClone.scaling.z = height / montantClone.getBoundingInfo().boundingBox.extendSize.z; // Ajuste la hauteur du montant
+      montantClone.position.y = height / 2;
+
+      return container;
+    }
+
+    // Mise à jour à chaque changement de valeur
+    document.getElementById("width").addEventListener("input", updateModel);
+    document.getElementById("height").addEventListener("input", updateModel);
 
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
