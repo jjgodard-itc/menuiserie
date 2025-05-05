@@ -20,21 +20,23 @@
 </head>
 <body>
   <div id="ui">
-    <!-- Les options du configurateur -->
     <label>Largeur (mm): <input type="number" id="width" value="1200"></label>
     <label>Hauteur (mm): <input type="number" id="height" value="2150"></label>
+
     <label>Ajouter allège :
       <input type="checkbox" id="addAllege">
     </label>
     <div id="allegeHeightSection" style="display: none;">
       <label>Hauteur allège (mm) : <input type="number" id="allegeHeight" value="300"></label>
     </div>
+
     <label>Ajouter imposte :
       <input type="checkbox" id="addImposte">
     </label>
     <div id="imposteHeightSection" style="display: none;">
       <label>Hauteur imposte (mm) : <input type="number" id="imposteHeight" value="300"></label>
     </div>
+
     <label>Nombre de vantaux :
       <select id="vantaux">
         <option value="1">1</option>
@@ -43,6 +45,7 @@
         <option value="4">4</option>
       </select>
     </label>
+
     <label>Couleur :
       <select id="couleur">
         <option value="Ral 1015">Ral 1015</option>
@@ -54,10 +57,13 @@
         <option value="Ral 9010">Ral 9010</option>
       </select>
     </label>
+
     <label>Ajouter vitrage :
       <input type="checkbox" id="vitrage" checked>
     </label>
+
     <label><button id="toggleVantaux">Ouvrir les ouvrants</button></label>
+    <label><button id="updateBtn">Mettre à jour</button></label>
   </div>
 
   <canvas id="renderCanvas"></canvas>
@@ -73,20 +79,15 @@
 
     const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 3 + Math.PI, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
-
     camera.wheelPrecision = 20;
     camera.lowerRadiusLimit = 1.5;
     camera.upperRadiusLimit = 20;
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
-    light.intensity = 1.5;
-
-    const directionalLight = new BABYLON.DirectionalLight("directionalLight", new BABYLON.Vector3(0, -1, 1), scene);
-    directionalLight.intensity = 0.7;
+    const directionalLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
 
     const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight);
     shadowGenerator.useExponentialShadowMap = true;
-    shadowGenerator.bias = 0.01;
 
     const ralColors = {
       "Ral 1015": new BABYLON.Color3.FromHexString("#FBE8A6"),
@@ -98,66 +99,88 @@
       "Ral 9010": new BABYLON.Color3.FromHexString("#FFFFFF")
     };
 
-    // Charger le modèle GLB
-    BABYLON.SceneLoader.ImportMesh(
-  null,
-  "https://jjgodard-itc.github.io/menuiserie/",
-  "Menuiserie.glb",
-  scene,
-  function (meshes) {
-    console.log("GLB chargé :", meshes);
-  },
-  null,
-  function (scene, message) {
-    console.error("Erreur de chargement :", message);
-  }
+    let loadedMeshes = [];
 
-
-      // Optionnel : ajuster la caméra pour mieux voir le modèle
-     // scene.createDefaultCameraOrLight(true, true, true);
-    )
-
-    // Le reste du code de votre projet pour la création des éléments de menuiserie...
-    // (frames, vantaux, meneaux, etc.)
-
-   // engine.runRenderLoop(() => scene.render());
-    //window.addEventListener("resize", () => engine.resize());
-
-    // Ajoutez les événements pour la mise à jour du configurateur
-   /* ["width", "height", "vantaux", "couleur", "vitrage"].forEach(id => {
-      document.getElementById(id).addEventListener("input", debounceUpdate);
-      document.getElementById(id).addEventListener("change", debounceUpdate);
+    // Affichage dynamique
+    document.getElementById("addAllege").addEventListener("change", function () {
+      document.getElementById("allegeHeightSection").style.display = this.checked ? "block" : "none";
+    });
+    document.getElementById("addImposte").addEventListener("change", function () {
+      document.getElementById("imposteHeightSection").style.display = this.checked ? "block" : "none";
     });
 
-    function debounceUpdate() {
-      clearTimeout(updateTimeout);
-      updateTimeout = setTimeout(updateWindow, 500);
+    // Charger le modèle
+    BABYLON.SceneLoader.ImportMesh(
+      null,
+      "https://jjgodard-itc.github.io/menuiserie/",
+      "Menuiserie.glb",
+      scene,
+      function (meshes) {
+        loadedMeshes = meshes;
+        applyColor();
+      },
+      null,
+      function (scene, message) {
+        console.error("Erreur de chargement :", message);
+      }
+    );
+
+    // Appliquer couleur
+    function applyColor() {
+      const color = ralColors[document.getElementById("couleur").value];
+      loadedMeshes.forEach(mesh => {
+        if (mesh.material) {
+          const mat = mesh.material.clone(mesh.name + "_mat");
+          if (mat.diffuseColor) mat.diffuseColor = color;
+          mesh.material = mat;
+        }
+      });
     }
-    //updateWindow();
+
+    document.getElementById("couleur").addEventListener("change", applyColor);
+
+    // Animation d'ouverture
+    document.getElementById("toggleVantaux").addEventListener("click", () => {
+      const vantail = scene.getMeshByName("Vantail_1");
+      if (vantail) {
+        BABYLON.Animation.CreateAndStartAnimation(
+          "openVantail",
+          vantail,
+          "rotation.y",
+          30,
+          60,
+          0,
+          Math.PI / 2,
+          0
+        );
+      }
+    });
+
+    // Mise à jour dimensions (exemple simplifié)
+    function updateModel() {
+      const width = parseFloat(document.getElementById("width").value) / 1000;
+      const height = parseFloat(document.getElementById("height").value) / 2150;
+      const addAllege = document.getElementById("addAllege").checked;
+      const addImposte = document.getElementById("addImposte").checked;
+
+      loadedMeshes.forEach(mesh => {
+        if (mesh.name.includes("Cadre") || mesh.name.includes("Vantail")) {
+          mesh.scaling.x = width;
+          mesh.scaling.y = height;
+        }
+        if (mesh.name.includes("Allege")) {
+          mesh.setEnabled(addAllege);
+        }
+        if (mesh.name.includes("Imposte")) {
+          mesh.setEnabled(addImposte);
+        }
+      });
+    }
+
+    document.getElementById("updateBtn").addEventListener("click", updateModel);
+
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
-    ["width", "height",  "vantaux", "couleur", "vitrage"].forEach(id => {
-      document.getElementById(id).addEventListener("input", debounceUpdate);
-      document.getElementById(id).addEventListener("change", debounceUpdate);
-    });
-	
-	function updateSectionVisibility() {
-      const addAllege = document.getElementById("addAllege").checked;
-      const allegeHeightSection = document.getElementById("allegeHeightSection");
-      const addImposte = document.getElementById("addImposte").checked;
-      const imposteHeightSection = document.getElementById("imposteHeightSection");
-
-      allegeHeightSection.style.display = addAllege ? "block" : "none";
-      imposteHeightSection.style.display = addImposte ? "block" : "none";
-    }
-	
-	document.getElementById("addAllege").addEventListener("change", updateSectionVisibility);
-    document.getElementById("addImposte").addEventListener("change", updateSectionVisibility);
-	
-	document.getElementById("addAllege").addEventListener("change", updateWindow);
-    document.getElementById("allegeHeight").addEventListener("input", updateWindow);
-    document.getElementById("addImposte").addEventListener("change", updateWindow);
-    document.getElementById("imposteHeight").addEventListener("input", updateWindow);*/
   </script>
 </body>
 </html>
