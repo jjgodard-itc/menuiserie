@@ -97,7 +97,7 @@
     };
 
     // Charger le modèle GLB
-    BABYLON.SceneLoader.ImportMesh("", "./", "Menuiserie.glb", scene, function (meshes) {
+    BABYLON.SceneLoader.ImportMesh("*", "./", "Menuiserie.glb", scene, function (meshes) {
       meshes.forEach(function(mesh) {
         mesh.position = BABYLON.Vector3.Zero();  // Positionner le mesh à l'origine
         mesh.scaling = new BABYLON.Vector3(1, 1, 1);  // Adapter l'échelle si nécessaire
