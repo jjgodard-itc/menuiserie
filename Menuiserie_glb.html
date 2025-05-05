@@ -171,15 +171,15 @@
   // Hauteur utile hors allège et imposte
   const effectiveHeight = userHeight - (addAllege ? allegeHeight : 0) - (addImposte ? imposteHeight : 0);
 
-  const scaleX = (userWidth / baseWidth;
+  const scaleX = userWidth / baseWidth;
   const scaleY = effectiveHeight - baseHeight;
 
       loadedMeshes.forEach(mesh => {
         if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
           mesh.scaling.x = scaleX;
-   /*       if(mesh.name.includes("Haut")){
-          mesh.x = scaleX;
-        }*/
+         if(mesh.name.includes("Haut")){
+          mesh.positoin.x = (userWidth / baseWidth)/1000;
+        }
         }
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           mesh.scaling.y = scaleY;
