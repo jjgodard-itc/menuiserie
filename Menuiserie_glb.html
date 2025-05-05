@@ -48,19 +48,26 @@
     directionalLight.intensity = 0.7;
 
     BABYLON.SceneLoader.ImportMesh(
-      null,
-      "https://jjgodard-itc.github.io/menuiserie/",
-      "Menuiserie.glb",
-      scene,
-      function (meshes) {
-        console.log("GLB chargé :", meshes);
-        updateModel(); // Créer le modèle une fois les meshes chargés
-      },
-      null,
-      function (scene, message) {
-        console.error("Erreur de chargement :", message);
-      }
-    );
+  null,
+  "https://jjgodard-itc.github.io/menuiserie/",
+  "Menuiserie.glb",
+  scene,
+  function (meshes) {
+    console.log("GLB chargé :", meshes);
+
+    // Lancer la première génération du modèle après chargement
+    updateModel();
+
+    // Écouteurs pour les interactions UI
+    document.querySelectorAll("#ui input, #ui select").forEach(el => {
+      el.addEventListener("change", updateModel);
+    });
+  },
+  null,
+  function (scene, message) {
+    console.error("Erreur de chargement :", message);
+  }
+);
 
     function updateModel() {
   const width = parseFloat(document.getElementById("width").value);
