@@ -63,110 +63,118 @@
     );
 
     function updateModel() {
-      const width = parseFloat(document.getElementById("width").value);
-      const height = parseFloat(document.getElementById("height").value);
+  const width = parseFloat(document.getElementById("width").value);
+  const height = parseFloat(document.getElementById("height").value);
+  const addAllege = document.getElementById("addAllege").checked;
+  const allegeHeight = parseFloat(document.getElementById("allegeHeight").value);
+  const addImposte = document.getElementById("addImposte").checked;
+  const imposteHeight = parseFloat(document.getElementById("imposteHeight").value);
 
-      // Supprimer anciens éléments
-      const oldTop = scene.getTransformNodeByName("Haut");
-      if (oldTop) oldTop.dispose();
+  // Nettoyer les anciens éléments (traverses et montants)
+  const nomsASupprimer = [
+    "Traverse_haut", "Traverse_bas", "Montant_gauche", "Montant_droite",
+    "Traverse_allège", "Traverse_imposte"
+  ];
+  nomsASupprimer.forEach(name => {
+    const node = scene.getTransformNodeByName(name);
+    if (node) node.dispose();
+  });
 
-      const oldBot = scene.getTransformNodeByName("Bas");
-      if (oldBot) oldBot.dispose();
+  // Traverse haute
+  createTraverseHorizontale(width, height / 2 - 25, "haut");
 
-      const oldLeft = scene.getTransformNodeByName("Gauche");
-      if (oldLeft) oldLeft.dispose();
+  // Traverse basse
+  createTraverseHorizontale(width, -height / 2 + 25, "bas");
 
-      const oldRight = scene.getTransformNodeByName("Droit");
-      if (oldRight) oldRight.dispose();
+  // Montants gauche et droite
+  createMontantVertical(height, -width / 2 + 25, "gauche");
+  createMontantVertical(height, width / 2 - 25, "droite");
 
-      // Créer les traverses
-      const top = createTraverseHorizontale(width);
-      top.name = "Haut";
-      top.position.y = height / 2 - 25;
+  // Allège
+  if (addAllege) {
+    createTraverseHorizontale(width, -height / 2 + allegeHeight + 25, "bas");
+  }
 
-      const bot = createTraverseHorizontale(width);
-      bot.name = "Bas";
-      bot.position.y = -height / 2 + 25;
+  // Imposte
+  if (addImposte) {
+    createTraverseHorizontale(width, height / 2 - imposteHeight - 25, "haut");
+  }
+}
 
-      // Créer les montants
-      const left = createMontantVertical(height);
-      left.name = "Gauche";
-      left.position.x = -width / 2 + 25; // Décalage à gauche
 
-      const right = createMontantVertical(height);
-      right.name = "Droit";
-      right.position.x = width / 2 - 25; // Décalage à droite
-    }
+    function createTraverseHorizontale(width, positionY, sens = "haut") {
+  const container = new BABYLON.TransformNode(`Traverse_${sens}`, scene);
 
-    function createTraverseHorizontale(width) {
-      const container = new BABYLON.TransformNode("TraverseContainer", scene);
+  const allMeshes = scene.meshes;
 
-      const extG = scene.getMeshByName("Traverse_Ext_G");
-      const extD = scene.getMeshByName("Traverse_Ext_D");
-      const segment = scene.getMeshByName("Traverse_Segment");
+  const extG = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Ext_G"));
+  const extD = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Ext_D"));
+  const segment = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Segment"));
 
-      if (!extG || !extD || !segment) {
-        console.error("Composants de traverse non trouvés");
-        return container;
-      }
+  if (!extG || !extD || !segment) {
+    console.error(`Composants de traverse ${sens} non trouvés`);
+    return container;
+  }
 
-      const extSize = 50; // Largeur des extrémités
-      const segSize = 100; // Longueur d’un segment
+  const extSize = 50;
+  const segSize = 100;
 
-      const nbSegments = Math.floor((width - 2 * extSize) / segSize);
-      const remainder = (width - 2 * extSize) - nbSegments * segSize;
-      const startX = -width / 2 + extSize;
+  const nbSegments = Math.floor((width - 2 * extSize) / segSize);
+  const remainder = (width - 2 * extSize) - nbSegments * segSize;
+  const startX = -width / 2 + extSize;
 
-      // Cloner extrémité gauche
-      const eg = extG.clone("EG");
-      eg.parent = container;
-      eg.position.x = -width / 2 + extSize / 2;
+  const eg = extG.clone(`ExtG_${sens}`);
+  eg.parent = container;
+  eg.position.x = -width / 2 + extSize / 2;
 
-      // Cloner extrémité droite
-      const ed = extD.clone("ED");
-      ed.parent = container;
-      ed.position.x = width / 2 - extSize / 2;
+  const ed = extD.clone(`ExtD_${sens}`);
+  ed.parent = container;
+  ed.position.x = width / 2 - extSize / 2;
 
-      // Cloner segments répétés
-      for (let i = 0; i < nbSegments; i++) {
-        const s = segment.clone("Segment_" + i);
-        s.parent = container;
-        s.position.x = startX + i * segSize + segSize / 2;
-      }
+  for (let i = 0; i < nbSegments; i++) {
+    const s = segment.clone(`Segment_${sens}_${i}`);
+    s.parent = container;
+    s.position.x = startX + i * segSize + segSize / 2;
+  }
 
-      // Segment final ajusté (si reste)
-      if (remainder > 1) {
-        const last = segment.clone("Segment_reste");
-        last.parent = container;
-        last.position.x = startX + nbSegments * segSize + remainder / 2;
-        last.scaling.x = remainder / segSize; // Optionnel
-      }
+  if (remainder > 1) {
+    const last = segment.clone(`Segment_${sens}_reste`);
+    last.parent = container;
+    last.position.x = startX + nbSegments * segSize + remainder / 2;
+    last.scaling.x = remainder / segSize;
+  }
 
-      return container;
-    }
+  container.position.y = positionY;
+  return container;
+}
 
-    // Fonction pour créer un montant vertical
-    function createMontantVertical(height) {
-      const container = new BABYLON.TransformNode("MontantContainer", scene);
+function createMontantVertical(height, positionX, sens = "gauche") {
+  const container = new BABYLON.TransformNode(`Montant_${sens}`, scene);
 
-      const montant = scene.getMeshByName("Traverse_Segment"); // On utilise le même modèle pour les montants
+  const montant = scene.meshes.find(m => m.name.includes(sens) && m.name.includes("Segment"));
+  if (!montant) {
+    console.error(`Modèle de montant ${sens} non trouvé`);
+    return container;
+  }
 
-      if (!montant) {
-        console.error("Modèle de montant non trouvé dans le GLB");
-        return container;
-      }
+  const montantClone = montant.clone(`MontantClone_${sens}`);
+  montantClone.parent = container;
+  montantClone.scaling.z = height / montantClone.getBoundingInfo().boundingBox.extendSize.z;
+  montantClone.position.y = height / 2;
 
-      const montantClone = montant.clone("MontantClone");
-      montantClone.parent = container;
-      montantClone.scaling.z = height / montantClone.getBoundingInfo().boundingBox.extendSize.z; // Ajuste la hauteur du montant
-      montantClone.position.y = height / 2;
+  container.position.x = positionX;
+  return container;
+}
 
-      return container;
-    }
 
     // Mise à jour à chaque changement de valeur
     document.getElementById("width").addEventListener("input", updateModel);
     document.getElementById("height").addEventListener("input", updateModel);
+
+    document.querySelectorAll("#ui input, #ui select").forEach(el => {
+  el.addEventListener("change", updateModel);
+});
+
 
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
