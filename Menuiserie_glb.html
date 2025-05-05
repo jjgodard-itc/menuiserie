@@ -172,7 +172,7 @@
   const effectiveHeight = userHeight - (addAllege ? allegeHeight : 0) - (addImposte ? imposteHeight : 0);
 
   const scaleX = userWidth / baseWidth;
-  const scaleY = effectiveHeight - baseHeight;
+  const scaleY = effectiveHeight / baseHeight;
 
       loadedMeshes.forEach(mesh => {
         if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
