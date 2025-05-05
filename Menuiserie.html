@@ -99,7 +99,7 @@
     function createMaterial(selectedColor, scene) {
       if (selectedColor === "Chêne") {
         const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
-        woodMat.diffuseTexture = new BABYLON.Texture("C:\Users\JeanJacquesGODARD\Desktop\Test babylon\textures\chene_clair.jpg", scene);
+        woodMat.diffuseTexture = new BABYLON.Texture("./chene_clair.jpg", scene);
         woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
         woodMat.backFaceCulling = false;
         return woodMat;
