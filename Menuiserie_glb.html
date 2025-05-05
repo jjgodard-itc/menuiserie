@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>Configurateur Menuiserie Babylon.js</title>
@@ -22,7 +22,37 @@
   <div id="ui">
     <label>Largeur (mm): <input type="number" id="width" value="1200"></label>
     <label>Hauteur (mm): <input type="number" id="height" value="2150"></label>
+    <label>Ajouter allège : <input type="checkbox" id="addAllege"></label>
+    <div id="allegeHeightSection" style="display: none;">
+      <label>Hauteur allège (mm) : <input type="number" id="allegeHeight" value="300"></label>
+    </div>
+    <label>Ajouter imposte : <input type="checkbox" id="addImposte"></label>
+    <div id="imposteHeightSection" style="display: none;">
+      <label>Hauteur imposte (mm) : <input type="number" id="imposteHeight" value="300"></label>
+    </div>
+    <label>Nombre de vantaux :
+      <select id="vantaux">
+        <option value="1">1</option>
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+    </label>
+    <label>Couleur :
+      <select id="couleur">
+        <option value="Ral 1015">Ral 1015</option>
+        <option value="Ral 3004" selected>Ral 3004</option>
+        <option value="Ral 5014">Ral 5014</option>
+        <option value="Ral 6019">Ral 6019</option>
+        <option value="Ral 7016">Ral 7016</option>
+        <option value="Ral 9005">Ral 9005</option>
+        <option value="Ral 9010">Ral 9010</option>
+      </select>
+    </label>
+    <label>Ajouter vitrage : <input type="checkbox" id="vitrage" checked></label>
+    <label><button id="toggleVantaux">Ouvrir les ouvrants</button></label>
   </div>
+
   <canvas id="renderCanvas"></canvas>
 
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -34,9 +64,8 @@
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color3(0.9, 0.9, 0.95);
 
-    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 3 + Math.PI, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
+    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI + Math.PI/3, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
-
     camera.wheelPrecision = 20;
     camera.lowerRadiusLimit = 1.5;
     camera.upperRadiusLimit = 20;
@@ -47,144 +76,92 @@
     const directionalLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
     directionalLight.intensity = 0.7;
 
-    BABYLON.SceneLoader.ImportMesh(
-  null,
-  "https://jjgodard-itc.github.io/menuiserie/",
-  "Menuiserie.glb",
-  scene,
-  function (meshes) {
-    console.log("GLB chargé :", meshes);
+    let glbLoaded = false;
+    let allMeshes = [];
 
-    // Lancer la première génération du modèle après chargement
-    updateModel();
+    // Import du modèle GLB
+    BABYLON.SceneLoader.ImportMesh(null, "https://jjgodard-itc.github.io/menuiserie/", "Menuiserie.glb", scene,
+      function (meshes) {
+        allMeshes = meshes;
+        glbLoaded = true;
+        tryInitConfigurator();
+      },
+      null,
+      function (scene, message) {
+        console.error("Erreur de chargement :", message);
+      }
+    );
 
-    // Écouteurs pour les interactions UI
-    document.querySelectorAll("#ui input, #ui select").forEach(el => {
-      el.addEventListener("change", updateModel);
-    });
-  },
-  null,
-  function (scene, message) {
-    console.error("Erreur de chargement :", message);
-  }
-);
+    // Fonction principale après DOM + modèle prêts
+    function tryInitConfigurator() {
+      if (!glbLoaded || !document.getElementById("addAllege")) {
+        setTimeout(tryInitConfigurator, 100);
+        return;
+      }
 
+      updateModel();
+
+      document.querySelectorAll("#ui input, #ui select").forEach(el => {
+        el.addEventListener("change", updateModel);
+      });
+
+      document.getElementById("addAllege").addEventListener("change", e => {
+        document.getElementById("allegeHeightSection").style.display = e.target.checked ? "block" : "none";
+      });
+
+      document.getElementById("addImposte").addEventListener("change", e => {
+        document.getElementById("imposteHeightSection").style.display = e.target.checked ? "block" : "none";
+      });
+    }
+
+    // Fonction pour mettre à jour les pièces en fonction des dimensions
     function updateModel() {
-  const width = parseFloat(document.getElementById("width").value);
-  const height = parseFloat(document.getElementById("height").value);
-  const addAllege = document.getElementById("addAllege").checked;
-  const allegeHeight = parseFloat(document.getElementById("allegeHeight").value);
-  const addImposte = document.getElementById("addImposte").checked;
-  const imposteHeight = parseFloat(document.getElementById("imposteHeight").value);
+      const width = parseFloat(document.getElementById("width").value);
+      const height = parseFloat(document.getElementById("height").value);
+      const addAllege = document.getElementById("addAllege").checked;
+      const allegeHeight = parseFloat(document.getElementById("allegeHeight").value);
+      const addImposte = document.getElementById("addImposte").checked;
+      const imposteHeight = parseFloat(document.getElementById("imposteHeight").value);
 
-  // Nettoyer les anciens éléments (traverses et montants)
-  const nomsASupprimer = [
-    "Traverse_haut", "Traverse_bas", "Montant_gauche", "Montant_droite",
-    "Traverse_allège", "Traverse_imposte"
-  ];
-  nomsASupprimer.forEach(name => {
-    const node = scene.getTransformNodeByName(name);
-    if (node) node.dispose();
-  });
+      allMeshes.forEach(mesh => {
+        if (mesh.name.includes("haut")) {
+          mesh.position.y = (height / 2) - 25;
+        }
+        else if (mesh.name.includes("bas")) {
+          mesh.position.y = (-height / 2) + 25;
+        }
+        else if (mesh.name.includes("gauche")) {
+          mesh.position.x = (-width / 2) + 25;
+        }
+        else if (mesh.name.includes("droite")) {
+          mesh.position.x = (width / 2) - 25;
+        }
 
-  // Traverse haute
-  createTraverseHorizontale(width, height / 2 - 25, "haut");
+        // Gestion imposte
+        if (addImposte && mesh.name.includes("imposte")) {
+          mesh.isVisible = true;
+          mesh.position.y = (height / 2) - imposteHeight - 25;
+        } else if (mesh.name.includes("imposte")) {
+          mesh.isVisible = false;
+        }
 
-  // Traverse basse
-  createTraverseHorizontale(width, -height / 2 + 25, "bas");
+        // Gestion allège
+        if (addAllege && mesh.name.includes("allege")) {
+          mesh.isVisible = true;
+          mesh.position.y = (-height / 2) + allegeHeight + 25;
+        } else if (mesh.name.includes("allege")) {
+          mesh.isVisible = false;
+        }
+      });
+    }
 
-  // Montants gauche et droite
-  createMontantVertical(height, -width / 2 + 25, "gauche");
-  createMontantVertical(height, width / 2 - 25, "droite");
+    engine.runRenderLoop(() => {
+      scene.render();
+    });
 
-  // Allège
-  if (addAllege) {
-    createTraverseHorizontale(width, -height / 2 + allegeHeight + 25, "bas");
-  }
-
-  // Imposte
-  if (addImposte) {
-    createTraverseHorizontale(width, height / 2 - imposteHeight - 25, "haut");
-  }
-}
-
-
-    function createTraverseHorizontale(width, positionY, sens = "haut") {
-  const container = new BABYLON.TransformNode(`Traverse_${sens}`, scene);
-
-  const allMeshes = scene.meshes;
-
-  const extG = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Ext_G"));
-  const extD = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Ext_D"));
-  const segment = allMeshes.find(m => m.name.includes(`${sens}`) && m.name.includes("Segment"));
-
-  if (!extG || !extD || !segment) {
-    console.error(`Composants de traverse ${sens} non trouvés`);
-    return container;
-  }
-
-  const extSize = 50;
-  const segSize = 100;
-
-  const nbSegments = Math.floor((width - 2 * extSize) / segSize);
-  const remainder = (width - 2 * extSize) - nbSegments * segSize;
-  const startX = -width / 2 + extSize;
-
-  const eg = extG.clone(`ExtG_${sens}`);
-  eg.parent = container;
-  eg.position.x = -width / 2 + extSize / 2;
-
-  const ed = extD.clone(`ExtD_${sens}`);
-  ed.parent = container;
-  ed.position.x = width / 2 - extSize / 2;
-
-  for (let i = 0; i < nbSegments; i++) {
-    const s = segment.clone(`Segment_${sens}_${i}`);
-    s.parent = container;
-    s.position.x = startX + i * segSize + segSize / 2;
-  }
-
-  if (remainder > 1) {
-    const last = segment.clone(`Segment_${sens}_reste`);
-    last.parent = container;
-    last.position.x = startX + nbSegments * segSize + remainder / 2;
-    last.scaling.x = remainder / segSize;
-  }
-
-  container.position.y = positionY;
-  return container;
-}
-
-function createMontantVertical(height, positionX, sens = "gauche") {
-  const container = new BABYLON.TransformNode(`Montant_${sens}`, scene);
-
-  const montant = scene.meshes.find(m => m.name.includes(sens) && m.name.includes("Segment"));
-  if (!montant) {
-    console.error(`Modèle de montant ${sens} non trouvé`);
-    return container;
-  }
-
-  const montantClone = montant.clone(`MontantClone_${sens}`);
-  montantClone.parent = container;
-  montantClone.scaling.z = height / montantClone.getBoundingInfo().boundingBox.extendSize.z;
-  montantClone.position.y = height / 2;
-
-  container.position.x = positionX;
-  return container;
-}
-
-
-    // Mise à jour à chaque changement de valeur
-    document.getElementById("width").addEventListener("input", updateModel);
-    document.getElementById("height").addEventListener("input", updateModel);
-
-    document.querySelectorAll("#ui input, #ui select").forEach(el => {
-  el.addEventListener("change", updateModel);
-});
-
-
-    engine.runRenderLoop(() => scene.render());
-    window.addEventListener("resize", () => engine.resize());
+    window.addEventListener("resize", () => {
+      engine.resize();
+    });
   </script>
 </body>
 </html>
