@@ -111,11 +111,11 @@
     // Le reste du code de votre projet pour la création des éléments de menuiserie...
     // (frames, vantaux, meneaux, etc.)
 
-    engine.runRenderLoop(() => scene.render());
-    window.addEventListener("resize", () => engine.resize());
+   // engine.runRenderLoop(() => scene.render());
+    //window.addEventListener("resize", () => engine.resize());
 
     // Ajoutez les événements pour la mise à jour du configurateur
-    ["width", "height", "vantaux", "couleur", "vitrage"].forEach(id => {
+   /* ["width", "height", "vantaux", "couleur", "vitrage"].forEach(id => {
       document.getElementById(id).addEventListener("input", debounceUpdate);
       document.getElementById(id).addEventListener("change", debounceUpdate);
     });
@@ -148,7 +148,7 @@
 	document.getElementById("addAllege").addEventListener("change", updateWindow);
     document.getElementById("allegeHeight").addEventListener("input", updateWindow);
     document.getElementById("addImposte").addEventListener("change", updateWindow);
-    document.getElementById("imposteHeight").addEventListener("input", updateWindow);
+    document.getElementById("imposteHeight").addEventListener("input", updateWindow);*/
   </script>
 </body>
 </html>
