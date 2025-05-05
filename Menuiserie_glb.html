@@ -110,7 +110,7 @@
     });
 
     // Charger le modèle
-    BABYLON.SceneLoader.ImportMesh(
+    BABYLON.SceneLoader.ImportMeshDormant(
       null,
       "https://jjgodard-itc.github.io/menuiserie/",
       "Menuiserie.glb",
@@ -158,14 +158,27 @@
 
     // Mise à jour dimensions (exemple simplifié)
     function updateModel() {
-      const width = parseFloat(document.getElementById("width").value) / 1000;
-      const height = parseFloat(document.getElementById("height").value) / 2150;
-      const addAllege = document.getElementById("addAllege").checked;
-      const addImposte = document.getElementById("addImposte").checked;
+  const userWidth = parseFloat(document.getElementById("width").value);
+  const userHeight = parseFloat(document.getElementById("height").value);
+  const addAllege = document.getElementById("addAllege").checked;
+  const addImposte = document.getElementById("addImposte").checked;
+  const allegeHeight = parseFloat(document.getElementById("allegeHeight").value) || 0;
+  const imposteHeight = parseFloat(document.getElementById("imposteHeight").value) || 0;
+
+  const baseWidth = 1000;
+  const baseHeight = 1000;
+
+  // Hauteur utile hors allège et imposte
+  const effectiveHeight = userHeight - (addAllege ? allegeHeight : 0) - (addImposte ? imposteHeight : 0);
+
+  const scaleX = userWidth / baseWidth;
+  const scaleY = effectiveHeight / baseHeight;
 
       loadedMeshes.forEach(mesh => {
-        if (mesh.name.includes("Cadre") || mesh.name.includes("Vantail")) {
+        if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
           mesh.scaling.x = width;
+        }
+        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           mesh.scaling.y = height;
         }
         if (mesh.name.includes("Allege")) {
@@ -176,6 +189,8 @@
         }
       });
     }
+
+
 
     document.getElementById("updateBtn").addEventListener("click", updateModel);
 
