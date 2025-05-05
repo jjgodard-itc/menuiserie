@@ -178,13 +178,13 @@
         if (mesh.name.includes("Bas") || mesh.name.includes("Haut")) {
           mesh.scaling.x = scaleX;
          if(mesh.name.includes("Haut")){
-          mesh.position.z = (effectiveHeight - baseHeight)/1000;
+          mesh.position.z = -(effectiveHeight - baseHeight)/1000;
         }
         }
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           mesh.scaling.z = scaleY;
           if(mesh.name.includes("Droite")){
-          mesh.position.x = (userWidth - baseWidth)/1000;
+          mesh.position.x = -(userWidth - baseWidth)/1000;
         }
         }
         if (mesh.name.includes("Allege")) {
