@@ -74,17 +74,17 @@
       return morph;
     }
 
-    function setupMorphTarget(mesh, axis) {
-      const amount = 0.5; // ex: 0.5 m d'extension possible
-
+    function setupMorphTarget(mesh, axis, amount) {
       if (!mesh.morphTargetManager) {
         mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
       }
 
+      // Reset previous morph targets
       while (mesh.morphTargetManager.numTargets > 0) {
         mesh.morphTargetManager.removeTarget(mesh.morphTargetManager.getTarget(0));
       }
 
+      // Create and add the new morph target
       const morph = createMorphTarget(mesh, axis, amount);
       if (morph) {
         mesh.morphTargetManager.addTarget(morph);
@@ -97,7 +97,7 @@
         return;
       }
 
-      initializeMorphTargets(); // ← AJOUTÉ
+      initializeMorphTargets();
       updateModel();
 
       document.querySelectorAll("#ui input").forEach(el => {
@@ -110,11 +110,11 @@
         if (!mesh.name) return;
 
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          setupMorphTarget(mesh, "x");
+          setupMorphTarget(mesh, "x", 0.5);
         }
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          setupMorphTarget(mesh, "z");
+          setupMorphTarget(mesh, "z", 0.5);
         }
       });
     }
@@ -130,25 +130,13 @@
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
           mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
           const morph = mesh.morphTargetManager.getTarget(0);
-          const influence = Math.max(0, (width - base) / 500);
-          console.log(`Haut/Bas influence: ${influence}`);
-          morph.influence = influence; // Apply morph target influence
-
-          if (morph.influence > 0) {
-            console.log(`Morph Target applied to ${mesh.name} with influence: ${morph.influence}`);
-          }
+          morph.influence = Math.max(0, (width - base) / 500); // Influence based on width
         }
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
           const morph = mesh.morphTargetManager.getTarget(0);
-          const influence = Math.max(0, (height - base) / 500);
-          console.log(`Gauche/Droite influence: ${influence}`);
-          morph.influence = influence; // Apply morph target influence
-
-          if (morph.influence > 0) {
-            console.log(`Morph Target applied to ${mesh.name} with influence: ${morph.influence}`);
-          }
+          morph.influence = Math.max(0, (height - base) / 500); // Influence based on height
         }
       });
     }
