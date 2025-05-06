@@ -64,11 +64,11 @@
         allMeshes = meshes;
         glbLoaded = true;
         meshes.forEach(mesh => {
-          if (mesh.getVerticesData) {
-            const original = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind).slice();
-            originalVertexData.set(mesh.name, original);
-          }
-        });
+        if (mesh.getVerticesData && mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind)) {
+        const original = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind).slice();
+        originalVertexData.set(mesh.name, original);
+        }
+      });
         tryInitConfigurator();
       },
       null,
