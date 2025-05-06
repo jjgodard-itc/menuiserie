@@ -58,41 +58,41 @@
     );
 
     function createMorphTarget(mesh, axis, amount = 0.2) {
-      const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-      const newPositions = positions.slice();
+  const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+  if (!positions) {
+    console.warn("Pas de données de vertex pour :", mesh.name);
+    return null;
+  }
 
-      for (let i = 0; i < positions.length; i += 3) {
-        if (axis === "x") newPositions[i] += amount;
-        else if (axis === "y") newPositions[i + 1] += amount;
-        else if (axis === "z") newPositions[i + 2] += amount;
-      }
+  const newPositions = positions.slice();
 
-      const morph = new BABYLON.MorphTarget(mesh.name + "_long", 1.0, scene);
-      morph.setPositions(newPositions);
-      return morph;
-    }
+  for (let i = 0; i < positions.length; i += 3) {
+    if (axis === "x") newPositions[i] += amount;
+    else if (axis === "y") newPositions[i + 1] += amount;
+    else if (axis === "z") newPositions[i + 2] += amount;
+  }
 
-    function setupMorphTargetsForMeshX(mesh) {
-      if (!mesh.morphTargetManager) {
-        const manager = new BABYLON.MorphTargetManager(scene);
-        mesh.morphTargetManager = manager;
-        const morph = createMorphTarget(mesh, "x", 0); // 0.5 m d'allongement en X
-        manager.addTarget(morph);
-      }
-    }
+  const morph = new BABYLON.MorphTarget(mesh.name + "_morph", 1.0, scene);
+  morph.setPositions(newPositions);
+  return morph;
+}
 
-    function setupMorphTargetsForMeshZ(mesh) {
-      if (!mesh.morphTargetManager) {
-        const manager = new BABYLON.MorphTargetManager(scene);
-        mesh.morphTargetManager = manager;
-        const morph = createMorphTarget(mesh, "z", 0); // 0.5 m d'allongement en X
-        manager.addTarget(morph);
-      }
-    }
+function setupMorphTarget(mesh, axis, amount = 0.2) {
+  if (!mesh.morphTargetManager) {
+    const manager = new BABYLON.MorphTargetManager(scene);
+    mesh.morphTargetManager = manager;
+  }
+
+  if (mesh.morphTargetManager.numTargets === 0) {
+    const morph = createMorphTarget(mesh, axis, amount);
+    if (morph) mesh.morphTargetManager.addTarget(morph);
+  }
+}
+
 
     function tryInitConfigurator() {
       if (!glbLoaded || !document.getElementById("width")) {
-        setTimeout(tryInitConfigurator, 100);
+        setTimeout(tryInitConfigurator, 400);
         return;
       }
 
@@ -109,47 +109,32 @@
 
       allMeshes.forEach(mesh => {
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
+  if (mesh.name.includes("Haut")) {
+    mesh.position.z = (-height / 1000);
+  } else {
+    mesh.position.z = 0;
+  }
 
-          if (mesh.name.includes("Haut")) {
-          mesh.position.z = (-height / 1000) ;
-        }
-        else if (mesh.name.includes("Bas")) {
-          mesh.position.z = 0.0;
-        }
+  setupMorphTarget(mesh, "x", 0.5);  // longueur allongeable en X
+  const morph = mesh.morphTargetManager.getTarget(0);
+  const variation = (width - 1000) / 1000;
+  morph.influence = Math.max(0, variation);
+}
 
+else if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
+  if (mesh.name.includes("Gauche")) {
+    mesh.position.x = 0;
+  } else {
+    mesh.position.x = (width / 1000);
+  }
 
-          setupMorphTargetsForMeshX(mesh);
-
-          const morph = mesh.morphTargetManager.getTarget(0);
-
-          // Influence proportionnelle à l'écart de largeur (par rapport à 1000 mm)
-          const base = 1000;
-          const variation = (width - base) / 1000; // Ex: 1200 => 0.2
-          morph.influence = Math.max(0, variation);          
-        }
-        else if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-
-          if (mesh.name.includes("Gauche")) {
-          mesh.position.x = 0.0;
-        }
-        else if (mesh.name.includes("Droite")) {
-          mesh.position.x = (width / 1000);
-        }
-
-          setupMorphTargetsForMeshZ(mesh);
-
-          const morph = mesh.morphTargetManager.getTarget(0);
-
-          // Influence proportionnelle à l'écart de largeur (par rapport à 1000 mm)
-          const base = 1000;
-          const variation = (height - base) / 1000; // Ex: 1200 => 0.2
-          morph.influence = Math.max(0, variation);
-
-
-        
-        }
-      });
-    }
+  setupMorphTarget(mesh, "z", 0.5);  // hauteur allongeable en Z
+  const morph = mesh.morphTargetManager.getTarget(0);
+  const variation = (height - 1000) / 1000;
+  morph.influence = Math.max(0, variation);
+}
+    })}
+    
 
     engine.runRenderLoop(() => {
       scene.render();
