@@ -57,7 +57,7 @@
       }
     );
 
-    function createMorphTarget(mesh, axis = "x", amount = 0.2) {
+    function createMorphTarget(mesh, axis, amount = 0.2) {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       const newPositions = positions.slice();
 
