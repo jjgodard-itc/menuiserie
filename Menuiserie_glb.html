@@ -57,38 +57,35 @@
       }
     );
 
-    function createMorphTarget(mesh, axis, amount = 0.2) {
-  const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-  if (!positions) {
-    console.warn("Pas de données de vertex pour :", mesh.name);
-    return null;
-  }
+    function createMorphTarget(mesh, axis, amount) {
+      const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+      if (!positions) return null;
 
-  const newPositions = positions.slice();
+      const newPositions = positions.slice();
 
-  for (let i = 0; i < positions.length; i += 3) {
-    if (axis === "x") newPositions[i] += amount;
-    else if (axis === "y") newPositions[i + 1] += amount;
-    else if (axis === "z") newPositions[i + 2] += amount;
-  }
+      for (let i = 0; i < positions.length; i += 3) {
+        if (axis === "x") newPositions[i] += amount;
+        else if (axis === "y") newPositions[i + 1] += amount;
+        else if (axis === "z") newPositions[i + 2] += amount;
+      }
 
-  const morph = new BABYLON.MorphTarget(mesh.name + "_morph", 1.0, scene);
-  morph.setPositions(newPositions);
-  return morph;
-}
+      const morph = new BABYLON.MorphTarget(mesh.name + "_morph", 1.0, scene);
+      morph.setPositions(newPositions);
+      return morph;
+    }
 
-function setupMorphTarget(mesh, axis, amount = 0.2) {
-  if (!mesh.morphTargetManager) {
-    const manager = new BABYLON.MorphTargetManager(scene);
-    mesh.morphTargetManager = manager;
-  }
+    function setupMorphTarget(mesh, axis, amount) {
+      if (!mesh.morphTargetManager) {
+        mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
+      }
 
-  if (mesh.morphTargetManager.numTargets === 0) {
-    const morph = createMorphTarget(mesh, axis, amount);
-    if (morph) mesh.morphTargetManager.addTarget(morph);
-  }
-}
-
+      if (mesh.morphTargetManager.numTargets === 0) {
+        const morph = createMorphTarget(mesh, axis, amount);
+        if (morph) {
+          mesh.morphTargetManager.addTarget(morph);
+        }
+      }
+    }
 
     function tryInitConfigurator() {
       if (!glbLoaded || !document.getElementById("width")) {
@@ -106,39 +103,32 @@ function setupMorphTarget(mesh, axis, amount = 0.2) {
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
       const height = parseFloat(document.getElementById("height").value);
+      const base = 1000;
 
       allMeshes.forEach(mesh => {
+        if (!mesh.name) return;
+
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-  if (mesh.name.includes("Haut")) {
-    mesh.position.z = (-height / 1000);
-  } else {
-    mesh.position.z = 0;
-  }
+          // Déplacement vertical
+          mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
 
-  setupMorphTarget(mesh, "x", 0);  // longueur allongeable en X
-  const morph = mesh.morphTargetManager.getTarget(0);
-  const variation = (width - 1000) / 1000;
-  morph.influence = Math.max(0, variation);
+          // Allongement horizontal (X)
+          setupMorphTarget(mesh, "x", 0.5); // allongement fictif de 0.5 m
+          const morph = mesh.morphTargetManager.getTarget(0);
+          morph.influence = Math.max(0, (width - base) / 1000);
+        }
 
-  console.info(mesh);
-}
+        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
+          // Position horizontale
+          mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
 
-else if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-  if (mesh.name.includes("Gauche")) {
-    mesh.position.x = 0;
-  } else {
-    mesh.position.x = (width / 1000);
-  }
-
-  setupMorphTarget(mesh, "z", 0);  // hauteur allongeable en Z
-  const morph = mesh.morphTargetManager.getTarget(0);
-  const variation = (height - 1000) / 1000;
-  morph.influence = Math.max(0, variation);
-
-  console.info(mesh);
-}
-    })}
-    
+          // Allongement vertical (Z)
+          setupMorphTarget(mesh, "z", 0.5); // allongement fictif de 0.5 m
+          const morph = mesh.morphTargetManager.getTarget(0);
+          morph.influence = Math.max(0, (height - base) / 1000);
+        }
+      });
+    }
 
     engine.runRenderLoop(() => {
       scene.render();
