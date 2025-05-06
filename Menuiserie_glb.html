@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Configurateur Menuiserie Babylon.js</title>
+  <title>Configurateur Menuiserie avec Morph Targets</title>
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; }
     canvas { width: 100%; height: 100%; display: block; }
@@ -22,35 +22,6 @@
   <div id="ui">
     <label>Largeur (mm): <input type="number" id="width" value="1200"></label>
     <label>Hauteur (mm): <input type="number" id="height" value="2150"></label>
-    <label>Ajouter allège : <input type="checkbox" id="addAllege"></label>
-    <div id="allegeHeightSection" style="display: none;">
-      <label>Hauteur allège (mm) : <input type="number" id="allegeHeight" value="300"></label>
-    </div>
-    <label>Ajouter imposte : <input type="checkbox" id="addImposte"></label>
-    <div id="imposteHeightSection" style="display: none;">
-      <label>Hauteur imposte (mm) : <input type="number" id="imposteHeight" value="300"></label>
-    </div>
-    <label>Nombre de vantaux :
-      <select id="vantaux">
-        <option value="1">1</option>
-        <option value="2" selected>2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
-    </label>
-    <label>Couleur :
-      <select id="couleur">
-        <option value="Ral 1015">Ral 1015</option>
-        <option value="Ral 3004" selected>Ral 3004</option>
-        <option value="Ral 5014">Ral 5014</option>
-        <option value="Ral 6019">Ral 6019</option>
-        <option value="Ral 7016">Ral 7016</option>
-        <option value="Ral 9005">Ral 9005</option>
-        <option value="Ral 9010">Ral 9010</option>
-      </select>
-    </label>
-    <label>Ajouter vitrage : <input type="checkbox" id="vitrage" checked></label>
-    <label><button id="toggleVantaux">Ouvrir les ouvrants</button></label>
   </div>
 
   <canvas id="renderCanvas"></canvas>
@@ -67,19 +38,13 @@
     const camera = new BABYLON.ArcRotateCamera("camera", Math.PI + Math.PI/3, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 20;
-    camera.lowerRadiusLimit = 1.5;
-    camera.upperRadiusLimit = 20;
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
     light.intensity = 1.5;
 
-    const directionalLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 1), scene);
-    directionalLight.intensity = 0.7;
-
     let glbLoaded = false;
     let allMeshes = [];
 
-    // Import du modèle GLB
     BABYLON.SceneLoader.ImportMesh(null, "https://jjgodard-itc.github.io/menuiserie/", "Menuiserie.glb", scene,
       function (meshes) {
         allMeshes = meshes;
@@ -92,65 +57,56 @@
       }
     );
 
-    // Fonction principale après DOM + modèle prêts
+    function createMorphTarget(mesh, axis = "x", amount = 0.2) {
+      const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+      const newPositions = positions.slice();
+
+      for (let i = 0; i < positions.length; i += 3) {
+        if (axis === "x") newPositions[i] += amount;
+        else if (axis === "y") newPositions[i + 1] += amount;
+        else if (axis === "z") newPositions[i + 2] += amount;
+      }
+
+      const morph = new BABYLON.MorphTarget(mesh.name + "_long", 1.0, scene);
+      morph.setPositions(newPositions);
+      return morph;
+    }
+
+    function setupMorphTargetsForMesh(mesh) {
+      if (!mesh.morphTargetManager) {
+        const manager = new BABYLON.MorphTargetManager(scene);
+        mesh.morphTargetManager = manager;
+        const morph = createMorphTarget(mesh, "x", 0.5); // 0.5 m d'allongement en X
+        manager.addTarget(morph);
+      }
+    }
+
     function tryInitConfigurator() {
-      if (!glbLoaded || !document.getElementById("addAllege")) {
+      if (!glbLoaded || !document.getElementById("width")) {
         setTimeout(tryInitConfigurator, 100);
         return;
       }
 
       updateModel();
 
-      document.querySelectorAll("#ui input, #ui select").forEach(el => {
-        el.addEventListener("change", updateModel);
-      });
-
-      document.getElementById("addAllege").addEventListener("change", e => {
-        document.getElementById("allegeHeightSection").style.display = e.target.checked ? "block" : "none";
-      });
-
-      document.getElementById("addImposte").addEventListener("change", e => {
-        document.getElementById("imposteHeightSection").style.display = e.target.checked ? "block" : "none";
+      document.querySelectorAll("#ui input").forEach(el => {
+        el.addEventListener("input", updateModel);
       });
     }
 
-    // Fonction pour mettre à jour les pièces en fonction des dimensions
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
-      const height = parseFloat(document.getElementById("height").value);
-      const addAllege = document.getElementById("addAllege").checked;
-      const allegeHeight = parseFloat(document.getElementById("allegeHeight").value);
-      const addImposte = document.getElementById("addImposte").checked;
-      const imposteHeight = parseFloat(document.getElementById("imposteHeight").value);
 
       allMeshes.forEach(mesh => {
-        if (mesh.name.includes("Haut")) {
-          mesh.position.z = (-height / 1000) ;
-        }
-        else if (mesh.name.includes("Bas")) {
-          mesh.position.z = 0.0;
-        }
-        else if (mesh.name.includes("Gauche")) {
-          mesh.position.x = 0.0;
-        }
-        else if (mesh.name.includes("Droite")) {
-          mesh.position.x = (width / 1000);
-        }
+        if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
+          setupMorphTargetsForMesh(mesh);
 
-        // Gestion imposte
-        if (addImposte && mesh.name.includes("imposte")) {
-          mesh.isVisible = true;
-          mesh.position.y = (height / 2) - imposteHeight - 25;
-        } else if (mesh.name.includes("imposte")) {
-          mesh.isVisible = false;
-        }
+          const morph = mesh.morphTargetManager.getTarget(0);
 
-        // Gestion allège
-        if (addAllege && mesh.name.includes("allege")) {
-          mesh.isVisible = true;
-          mesh.position.y = (-height / 2) + allegeHeight + 25;
-        } else if (mesh.name.includes("allege")) {
-          mesh.isVisible = false;
+          // Influence proportionnelle à l'écart de largeur (par rapport à 1000 mm)
+          const base = 1000;
+          const variation = (width - base) / 1000; // Ex: 1200 => 0.2
+          morph.influence = Math.max(0, variation);
         }
       });
     }
