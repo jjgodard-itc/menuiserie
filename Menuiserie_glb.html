@@ -77,7 +77,6 @@
     function setupMorphTarget(mesh, axis) {
       const amount = 0.5; // ex: 0.5 m d'extension possible
 
-      // Réinitialisation de morphTargetManager avant d'ajouter un nouveau morph
       if (!mesh.morphTargetManager) {
         mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
       }
@@ -134,6 +133,10 @@
           const influence = Math.max(0, (width - base) / 500);
           console.log(`Haut/Bas influence: ${influence}`);
           morph.influence = influence; // Apply morph target influence
+
+          if (morph.influence > 0) {
+            console.log(`Morph Target applied to ${mesh.name} with influence: ${morph.influence}`);
+          }
         }
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
@@ -142,6 +145,10 @@
           const influence = Math.max(0, (height - base) / 500);
           console.log(`Gauche/Droite influence: ${influence}`);
           morph.influence = influence; // Apply morph target influence
+
+          if (morph.influence > 0) {
+            console.log(`Morph Target applied to ${mesh.name} with influence: ${morph.influence}`);
+          }
         }
       });
     }
