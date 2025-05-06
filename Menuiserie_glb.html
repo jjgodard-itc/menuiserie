@@ -92,50 +92,58 @@
 }
 
 
-    function tryInitConfigurator() {
-      if (!glbLoaded || !document.getElementById("width")) {
-        setTimeout(tryInitConfigurator, 400);
-        return;
-      }
+function tryInitConfigurator() {
+  if (!glbLoaded || !document.getElementById("width")) {
+    setTimeout(tryInitConfigurator, 400);
+    return;
+  }
 
-      updateModel();
+  initializeMorphTargets(); // ← AJOUTÉ
+  updateModel();
 
-      document.querySelectorAll("#ui input").forEach(el => {
-        el.addEventListener("input", updateModel);
-      });
+  document.querySelectorAll("#ui input").forEach(el => {
+    el.addEventListener("input", updateModel);
+  });
+}
+
+function initializeMorphTargets() {
+  allMeshes.forEach(mesh => {
+    if (!mesh.name) return;
+
+    if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
+      setupMorphTarget(mesh, "x");
     }
 
-    function updateModel() {
-      const width = parseFloat(document.getElementById("width").value);
-      const height = parseFloat(document.getElementById("height").value);
-      const base = 1000;
-
-      allMeshes.forEach(mesh => {
-        if (!mesh.name) return;
-
-        if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          // Déplacement vertical
-          mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
-
-          // Allongement horizontal (X)
-          setupMorphTarget(mesh, "x");
-          const morph = mesh.morphTargetManager.getTarget(0);
-          const influence = (width - base) / 500; // 500 = amount en mm
-          morph.influence = Math.max(0, influence);
-        }
-
-        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          // Position horizontale
-          mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
-
-          // Allongement vertical (Z)
-          setupMorphTarget(mesh, "z");
-          const morph = mesh.morphTargetManager.getTarget(0);
-          const influence = (height - base) / 500;
-          morph.influence = Math.max(0, influence);
-        }
-      });
+    if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
+      setupMorphTarget(mesh, "z");
     }
+  });
+}
+
+
+
+function updateModel() {
+  const width = parseFloat(document.getElementById("width").value);
+  const height = parseFloat(document.getElementById("height").value);
+  const base = 1000;
+
+  allMeshes.forEach(mesh => {
+    if (!mesh.name || !mesh.morphTargetManager) return;
+
+    if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
+      mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
+      const morph = mesh.morphTargetManager.getTarget(0);
+      morph.influence = Math.max(0, (width - base) / 500);
+    }
+
+    if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
+      mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
+      const morph = mesh.morphTargetManager.getTarget(0);
+      morph.influence = Math.max(0, (height - base) / 500);
+    }
+  });
+}
+
 
     engine.runRenderLoop(() => {
       scene.render();
