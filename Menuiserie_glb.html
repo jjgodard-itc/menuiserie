@@ -120,11 +120,10 @@
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           // Position horizontale
-          mesh.position.z = 0.0;
           mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
 
           // Allongement vertical (Z)
-          setupMorphTarget(mesh, "z", 0.5); // allongement fictif de 0.5 m
+          setupMorphTarget(mesh, "z", 0); // allongement fictif de 0.5 m
           const morph = mesh.morphTargetManager.getTarget(0);
           morph.influence = Math.max(0, (height - base) / 1000);
         }
