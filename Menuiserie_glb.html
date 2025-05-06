@@ -30,6 +30,27 @@
     <div id="imposteHeightSection" style="display: none;">
       <label>Hauteur imposte (mm) : <input type="number" id="imposteHeight" value="300"></label>
     </div>
+    <label>Nombre de vantaux :
+      <select id="vantaux">
+        <option value="1">1</option>
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+    </label>
+    <label>Couleur :
+      <select id="couleur">
+        <option value="Ral 1015">Ral 1015</option>
+        <option value="Ral 3004" selected>Ral 3004</option>
+        <option value="Ral 5014">Ral 5014</option>
+        <option value="Ral 6019">Ral 6019</option>
+        <option value="Ral 7016">Ral 7016</option>
+        <option value="Ral 9005">Ral 9005</option>
+        <option value="Ral 9010">Ral 9010</option>
+      </select>
+    </label>
+    <label>Ajouter vitrage : <input type="checkbox" id="vitrage" checked></label>
+    <label><button id="toggleVantaux">Ouvrir les ouvrants</button></label>
   </div>
 
   <canvas id="renderCanvas"></canvas>
@@ -57,18 +78,12 @@
 
     let glbLoaded = false;
     let allMeshes = [];
-    const originalVertexData = new Map();
 
+    // Import du modèle GLB
     BABYLON.SceneLoader.ImportMesh(null, "https://jjgodard-itc.github.io/menuiserie/", "Menuiserie.glb", scene,
       function (meshes) {
         allMeshes = meshes;
         glbLoaded = true;
-        meshes.forEach(mesh => {
-        if (mesh.getVerticesData && mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind)) {
-        const original = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind).slice();
-        originalVertexData.set(mesh.name, original);
-        }
-      });
         tryInitConfigurator();
       },
       null,
@@ -77,6 +92,7 @@
       }
     );
 
+    // Fonction principale après DOM + modèle prêts
     function tryInitConfigurator() {
       if (!glbLoaded || !document.getElementById("addAllege")) {
         setTimeout(tryInitConfigurator, 100);
@@ -98,6 +114,7 @@
       });
     }
 
+    // Fonction pour mettre à jour les pièces en fonction des dimensions
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
       const height = parseFloat(document.getElementById("height").value);
@@ -107,38 +124,20 @@
       const imposteHeight = parseFloat(document.getElementById("imposteHeight").value);
 
       allMeshes.forEach(mesh => {
-        const original = originalVertexData.get(mesh.name);
-        if (!original) return;
-
-        let newPositions = original.slice();
-
-        if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          const originalWidth = getMeshWidth(original);
-          const factorX = width / originalWidth;
-          newPositions = newPositions.map((v, i) => (i % 3 === 0 ? v * factorX : v));
-        }
-
-        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          const originalHeight = getMeshHeight(original);
-          const factorZ = height / originalHeight;
-          newPositions = newPositions.map((v, i) => (i % 3 === 1 ? v * factorZ : v));
-        }
-
-        mesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, newPositions, true);
-        mesh.refreshBoundingInfo();
-
-        if (mesh.name.includes("Gauche")) {
-          mesh.position.x = 0;
-        } else if (mesh.name.includes("Droite")) {
-          mesh.position.x = width / 1000;
-        }
-
         if (mesh.name.includes("Haut")) {
-          mesh.position.z = -height / 1000;
-        } else if (mesh.name.includes("Bas")) {
-          mesh.position.z = 0;
+          mesh.position.z = (-height / 1000) ;
+        }
+        else if (mesh.name.includes("Bas")) {
+          mesh.position.z = 0.0;
+        }
+        else if (mesh.name.includes("Gauche")) {
+          mesh.position.x = 0.0;
+        }
+        else if (mesh.name.includes("Droite")) {
+          mesh.position.x = (width / 1000);
         }
 
+        // Gestion imposte
         if (addImposte && mesh.name.includes("imposte")) {
           mesh.isVisible = true;
           mesh.position.y = (height / 2) - imposteHeight - 25;
@@ -146,6 +145,7 @@
           mesh.isVisible = false;
         }
 
+        // Gestion allège
         if (addAllege && mesh.name.includes("allege")) {
           mesh.isVisible = true;
           mesh.position.y = (-height / 2) + allegeHeight + 25;
@@ -153,26 +153,6 @@
           mesh.isVisible = false;
         }
       });
-    }
-
-    function getMeshWidth(positions) {
-      let minX = Infinity, maxX = -Infinity;
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-      }
-      return (maxX - minX) * 1000;
-    }
-
-    function getMeshHeight(positions) {
-      let minY = Infinity, maxY = -Infinity;
-      for (let i = 0; i < positions.length; i += 3) {
-        const y = positions[i + 1];
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      }
-      return (maxY - minY) * 1000;
     }
 
     engine.runRenderLoop(() => {
