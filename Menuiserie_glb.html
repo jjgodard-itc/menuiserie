@@ -136,15 +136,17 @@ function updateModel() {
     if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
       mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
       const morph = mesh.morphTargetManager.getTarget(0);
-      morph.influence = Math.max(0, (width - base) / 500);
-      console.log(mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind));
+      const influence = Math.max(0, (width - base) / 500);
+      console.log(`Haut/Bas influence: ${influence}`);
+      morph.influence = influence; // Apply morph target influence
     }
 
     if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
       mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
       const morph = mesh.morphTargetManager.getTarget(0);
-      morph.influence = Math.max(0, (height - base) / 500);
-      console.log(mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind));
+      const influence = Math.max(0, (height - base) / 500);
+      console.log(`Gauche/Droite influence: ${influence}`);
+      morph.influence = influence; // Apply morph target influence
     }
   });
 }
