@@ -43,7 +43,7 @@
     light.intensity = 1.5;
 
     // Création du cube de test
-    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene); // Augmenter la taille du cube pour une meilleure visibilité
+    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene); // Cube de taille augmentée pour une meilleure visibilité
 
     // Création de la manager de morph targets
     const morphTargetManager = new BABYLON.MorphTargetManager(scene);
@@ -57,8 +57,8 @@
     function createMorphTarget(amount) {
       const newPositions = originalPositions.slice();
       for (let i = 0; i < originalPositions.length; i += 3) {
-        // Application d'un changement plus visible sur l'axe X (par exemple, multiplier par 10 pour un effet visible)
-        newPositions[i] += amount * 10; // Multiplier par 10 pour voir une déformation plus importante
+        // Applique une déformation visible sur l'axe X (facteur de déformation amplifié)
+        newPositions[i] += amount * 0.1; // Multiplier par 0.1 pour une déformation plus perceptible
       }
 
       const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
@@ -66,8 +66,8 @@
       return morph;
     }
 
-    // Initialisation du morph target avec un changement plus grand
-    const morphTarget = createMorphTarget(0.5);
+    // Initialisation du morph target avec une déformation visible
+    const morphTarget = createMorphTarget(0.5); // Valeur modifiable pour tester l'effet
     morphTargetManager.addTarget(morphTarget);
 
     // Mise à jour dynamique de l'influence du morph target en fonction de l'input
@@ -76,16 +76,17 @@
       const height = parseFloat(document.getElementById("height").value);
       const base = 1000;
 
+      // Positionner les objets avant d'appliquer les morphs
+      box.position.x = width / 1000;  // Positionner selon la largeur
+      box.position.z = height / 1000; // Positionner selon la hauteur
+
+      // Calcul de l'influence sur l'axe X (width) et Z (height)
       const influenceX = Math.max(0, (width - base) / 500);  // Influence basée sur la largeur
       const influenceZ = Math.max(0, (height - base) / 500); // Influence basée sur la hauteur
 
       // Mise à jour de l'influence du morph target
       morphTarget.influence = Math.max(influenceX, influenceZ);
       console.log("Influence du morph target :", morphTarget.influence);
-
-      // Ajustement de la position du mesh
-      box.position.x = width / 1000;
-      box.position.z = height / 1000;
     }
 
     // Application de la mise à jour à chaque changement de l'input
