@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Configurateur Menuiserie avec Morph Targets</title>
+  <title>Test Morph Targets Dynamiques</title>
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; }
     canvas { width: 100%; height: 100%; display: block; }
@@ -42,104 +42,35 @@
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
     light.intensity = 1.5;
 
-    let glbLoaded = false;
-    let allMeshes = [];
+    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+    const morphTargetManager = new BABYLON.MorphTargetManager(scene);
+    box.morphTargetManager = morphTargetManager;
 
-    BABYLON.SceneLoader.ImportMesh(null, "https://jjgodard-itc.github.io/menuiserie/", "Menuiserie.glb", scene,
-      function (meshes) {
-        allMeshes = meshes;
-        glbLoaded = true;
-        tryInitConfigurator();
-      },
-      null,
-      function (scene, message) {
-        console.error("Erreur de chargement :", message);
-      }
-    );
+    // Création d'un morph target simple
+    const positions = box.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+    const newPositions = positions.slice();
 
-    function createMorphTarget(mesh, axis, amount) {
-      const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-      if (!positions) return null;
-
-      const newPositions = positions.slice();
-
-      for (let i = 0; i < positions.length; i += 3) {
-        if (axis === "x") newPositions[i] += amount;
-        else if (axis === "y") newPositions[i + 1] += amount;
-        else if (axis === "z") newPositions[i + 2] += amount;
-      }
-
-      const morph = new BABYLON.MorphTarget(mesh.name + "_morph", 1.0, scene);
-      morph.setPositions(newPositions);
-      return morph;
+    // Déplacement de la position sur l'axe X
+    for (let i = 0; i < positions.length; i += 3) {
+      newPositions[i] += 0.5;  // Déplacement de 0.5 sur X
     }
 
-    function setupMorphTarget(mesh, axis, amount) {
-      if (!mesh.morphTargetManager) {
-        mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
-      }
+    const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
+    morph.setPositions(newPositions);
+    morphTargetManager.addTarget(morph);
 
-      // Reset previous morph targets
-      while (mesh.morphTargetManager.numTargets > 0) {
-        mesh.morphTargetManager.removeTarget(mesh.morphTargetManager.getTarget(0));
-      }
-
-      // Create and add the new morph target
-      const morph = createMorphTarget(mesh, axis, amount);
-      if (morph) {
-        mesh.morphTargetManager.addTarget(morph);
-      }
-    }
-
-    function tryInitConfigurator() {
-      if (!glbLoaded || !document.getElementById("width")) {
-        setTimeout(tryInitConfigurator, 400);
-        return;
-      }
-
-      initializeMorphTargets();
-      updateModel();
-
-      document.querySelectorAll("#ui input").forEach(el => {
-        el.addEventListener("input", updateModel);
-      });
-    }
-
-    function initializeMorphTargets() {
-      allMeshes.forEach(mesh => {
-        if (!mesh.name) return;
-
-        if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          setupMorphTarget(mesh, "x", 0.5);
-        }
-
-        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          setupMorphTarget(mesh, "z", 0.5);
-        }
-      });
-    }
-
+    // Fonction de mise à jour de l'influence du morph target
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
       const height = parseFloat(document.getElementById("height").value);
       const base = 1000;
 
-      allMeshes.forEach(mesh => {
-        if (!mesh.name || !mesh.morphTargetManager) return;
-
-        if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
-          const morph = mesh.morphTargetManager.getTarget(0);
-          morph.influence = Math.max(0, (width - base) / 500); // Influence based on width
-        }
-
-        if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
-          mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
-          const morph = mesh.morphTargetManager.getTarget(0);
-          morph.influence = Math.max(0, (height - base) / 500); // Influence based on height
-        }
-      });
+      morph.influence = Math.max(0, (width - base) / 500); // Influence basée sur la largeur
     }
+
+    document.querySelectorAll("#ui input").forEach(el => {
+      el.addEventListener("input", updateModel);
+    });
 
     engine.runRenderLoop(() => {
       scene.render();
