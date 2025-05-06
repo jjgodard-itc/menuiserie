@@ -35,54 +35,73 @@
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color3(0.9, 0.9, 0.95);
 
-    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI + Math.PI/3, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
+    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI + Math.PI / 3, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 20;
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
     light.intensity = 1.5;
 
+    // Création du cube de test
     const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+
+    // Création de la manager de morph targets
     const morphTargetManager = new BABYLON.MorphTargetManager(scene);
     box.morphTargetManager = morphTargetManager;
 
-    // Création d'un morph target simple
-    const positions = box.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-    const newPositions = positions.slice();
+    // Capture des positions de base des vertices du cube
+    const basePositions = box.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+    const originalPositions = basePositions.slice(); // Sauvegarde de l'état initial
 
-    // Vérification des positions initiales
-    console.log("Positions initiales : ", positions);
+    // Vérification des positions initiales dans le log
+    console.log("Positions initiales du cube : ", basePositions);
 
-    // Déplacement de la position sur l'axe X
-    for (let i = 0; i < positions.length; i += 3) {
-      newPositions[i] += 0.5;  // Déplacement de 0.5 sur X
+    // Fonction pour créer un morph target
+    function createMorphTarget(amount) {
+      const newPositions = originalPositions.slice();
+      for (let i = 0; i < originalPositions.length; i += 3) {
+        // Application d'un changement sur l'axe X
+        newPositions[i] += amount;
+      }
+
+      const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
+      morph.setPositions(newPositions);
+      return morph;
     }
 
-    // Vérification des nouvelles positions
-    console.log("Positions modifiées : ", newPositions);
+    // Initialisation du morph target avec un changement de base (par exemple 0.5)
+    const morphTarget = createMorphTarget(0.5);
+    morphTargetManager.addTarget(morphTarget);
 
-    const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
-    morph.setPositions(newPositions);
-    morphTargetManager.addTarget(morph);
-
-    // Fonction de mise à jour de l'influence du morph target
+    // Mise à jour dynamique de l'influence du morph target en fonction de l'input
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
       const height = parseFloat(document.getElementById("height").value);
       const base = 1000;
 
-      morph.influence = Math.max(0, (width - base) / 500); // Influence basée sur la largeur
-      console.log("Influence du morph target : ", morph.influence);  // Vérification de l'influence
+      const influenceX = Math.max(0, (width - base) / 500);  // Influence basée sur la largeur
+      const influenceZ = Math.max(0, (height - base) / 500); // Influence basée sur la hauteur
+
+      // Mise à jour de l'influence du morph target
+      morphTarget.influence = Math.max(influenceX, influenceZ);
+      console.log("Influence du morph target :", morphTarget.influence);
+
+      // Ajustement de la position du mesh
+      box.position.x = width / 1000;
+      box.position.z = height / 1000;
     }
 
+    // Application de la mise à jour à chaque changement de l'input
     document.querySelectorAll("#ui input").forEach(el => {
       el.addEventListener("input", updateModel);
     });
 
+    // Fonction de mise à jour de la scène
     engine.runRenderLoop(() => {
       scene.render();
     });
 
+    // Redimensionnement de la scène à l'ajustement de la fenêtre
     window.addEventListener("resize", () => {
       engine.resize();
     });
