@@ -43,7 +43,7 @@
     light.intensity = 1.5;
 
     // Création du cube de test
-    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene); // Augmenter la taille du cube pour une meilleure visibilité
 
     // Création de la manager de morph targets
     const morphTargetManager = new BABYLON.MorphTargetManager(scene);
@@ -53,15 +53,12 @@
     const basePositions = box.getVerticesData(BABYLON.VertexBuffer.PositionKind);
     const originalPositions = basePositions.slice(); // Sauvegarde de l'état initial
 
-    // Vérification des positions initiales dans le log
-    console.log("Positions initiales du cube : ", basePositions);
-
     // Fonction pour créer un morph target
     function createMorphTarget(amount) {
       const newPositions = originalPositions.slice();
       for (let i = 0; i < originalPositions.length; i += 3) {
-        // Application d'un changement plus visible sur l'axe X (par exemple, multiplier par 2)
-        newPositions[i] += amount * 2; // Augmentation de l'amplitude de la déformation
+        // Application d'un changement plus visible sur l'axe X (par exemple, multiplier par 10 pour un effet visible)
+        newPositions[i] += amount * 10; // Multiplier par 10 pour voir une déformation plus importante
       }
 
       const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
