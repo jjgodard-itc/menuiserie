@@ -96,8 +96,7 @@
 
     function updateModel() {
       const width = parseFloat(document.getElementById("width").value);
-
-
+      const height = parseFloat(document.getElementById("height").value);
 
       allMeshes.forEach(mesh => {
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
