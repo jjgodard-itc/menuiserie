@@ -76,7 +76,7 @@
       if (!mesh.morphTargetManager) {
         const manager = new BABYLON.MorphTargetManager(scene);
         mesh.morphTargetManager = manager;
-        const morph = createMorphTarget(mesh, "x", 0.5); // 0.5 m d'allongement en X
+        const morph = createMorphTarget(mesh, "x", 0); // 0.5 m d'allongement en X
         manager.addTarget(morph);
       }
     }
@@ -85,7 +85,7 @@
       if (!mesh.morphTargetManager) {
         const manager = new BABYLON.MorphTargetManager(scene);
         mesh.morphTargetManager = manager;
-        const morph = createMorphTarget(mesh, "z", 0.5); // 0.5 m d'allongement en X
+        const morph = createMorphTarget(mesh, "z", 0); // 0.5 m d'allongement en X
         manager.addTarget(morph);
       }
     }
@@ -109,14 +109,6 @@
 
       allMeshes.forEach(mesh => {
         if (mesh.name.includes("Haut") || mesh.name.includes("Bas")) {
-          setupMorphTargetsForMeshX(mesh);
-
-          const morph = mesh.morphTargetManager.getTarget(0);
-
-          // Influence proportionnelle à l'écart de largeur (par rapport à 1000 mm)
-          const base = 1000;
-          const variation = (width - base) / 1000; // Ex: 1200 => 0.2
-          morph.influence = Math.max(0, variation);
 
           if (mesh.name.includes("Haut")) {
           mesh.position.z = (-height / 1000) ;
@@ -124,8 +116,26 @@
         else if (mesh.name.includes("Bas")) {
           mesh.position.z = 0.0;
         }
+
+
+          setupMorphTargetsForMeshX(mesh);
+
+          const morph = mesh.morphTargetManager.getTarget(0);
+
+          // Influence proportionnelle à l'écart de largeur (par rapport à 1000 mm)
+          const base = 1000;
+          const variation = (width - base) / 1000; // Ex: 1200 => 0.2
+          morph.influence = Math.max(0, variation);          
         }
         else if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
+
+          if (mesh.name.includes("Gauche")) {
+          mesh.position.x = 0.0;
+        }
+        else if (mesh.name.includes("Droite")) {
+          mesh.position.x = (width / 1000);
+        }
+
           setupMorphTargetsForMeshZ(mesh);
 
           const morph = mesh.morphTargetManager.getTarget(0);
@@ -136,12 +146,7 @@
           morph.influence = Math.max(0, variation);
 
 
-          if (mesh.name.includes("Gauche")) {
-          mesh.position.x = 0.0;
-        }
-        else if (mesh.name.includes("Droite")) {
-          mesh.position.x = (width / 1000);
-        }
+        
         }
       });
     }
