@@ -113,7 +113,7 @@
           mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
 
           // Allongement horizontal (X)
-          setupMorphTarget(mesh, "x", 0.5); // allongement fictif de 0.5 m
+          setupMorphTarget(mesh, "x", 0); // allongement fictif de 0.5 m
           const morph = mesh.morphTargetManager.getTarget(0);
           morph.influence = Math.max(0, (width - base) / 1000);
         }
