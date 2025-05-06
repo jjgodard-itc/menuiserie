@@ -79,6 +79,11 @@
         mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
       }
 
+      // Supprime les morphs existants (important pour éviter les doublons ou conflits)
+  while (mesh.morphTargetManager.numTargets > 0) {
+    mesh.morphTargetManager.removeTarget(mesh.morphTargetManager.getTarget(0));
+  }
+
       if (mesh.morphTargetManager.numTargets === 0) {
         const morph = createMorphTarget(mesh, axis, amount);
         if (morph) {
