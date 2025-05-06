@@ -50,10 +50,16 @@
     const positions = box.getVerticesData(BABYLON.VertexBuffer.PositionKind);
     const newPositions = positions.slice();
 
+    // Vérification des positions initiales
+    console.log("Positions initiales : ", positions);
+
     // Déplacement de la position sur l'axe X
     for (let i = 0; i < positions.length; i += 3) {
       newPositions[i] += 0.5;  // Déplacement de 0.5 sur X
     }
+
+    // Vérification des nouvelles positions
+    console.log("Positions modifiées : ", newPositions);
 
     const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
     morph.setPositions(newPositions);
@@ -66,6 +72,7 @@
       const base = 1000;
 
       morph.influence = Math.max(0, (width - base) / 500); // Influence basée sur la largeur
+      console.log("Influence du morph target : ", morph.influence);  // Vérification de l'influence
     }
 
     document.querySelectorAll("#ui input").forEach(el => {
