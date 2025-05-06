@@ -74,23 +74,23 @@
       return morph;
     }
 
-    function setupMorphTarget(mesh, axis, amount) {
-      if (!mesh.morphTargetManager) {
-        mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
-      }
+    function setupMorphTarget(mesh, axis) {
+  const amount = 0.5; // ex: 0.5 m d'extension possible
 
-      // Supprime les morphs existants (important pour éviter les doublons ou conflits)
+  if (!mesh.morphTargetManager) {
+    mesh.morphTargetManager = new BABYLON.MorphTargetManager(scene);
+  }
+
   while (mesh.morphTargetManager.numTargets > 0) {
     mesh.morphTargetManager.removeTarget(mesh.morphTargetManager.getTarget(0));
   }
 
-      if (mesh.morphTargetManager.numTargets === 0) {
-        const morph = createMorphTarget(mesh, axis, amount);
-        if (morph) {
-          mesh.morphTargetManager.addTarget(morph);
-        }
-      }
-    }
+  const morph = createMorphTarget(mesh, axis, amount);
+  if (morph) {
+    mesh.morphTargetManager.addTarget(morph);
+  }
+}
+
 
     function tryInitConfigurator() {
       if (!glbLoaded || !document.getElementById("width")) {
@@ -118,9 +118,10 @@
           mesh.position.z = mesh.name.includes("Haut") ? -height / 1000 : 0;
 
           // Allongement horizontal (X)
-          setupMorphTarget(mesh, "x", 0); // allongement fictif de 0.5 m
+          setupMorphTarget(mesh, "x");
           const morph = mesh.morphTargetManager.getTarget(0);
-          morph.influence = Math.max(0, (width - base) / 1000);
+          const influence = (width - base) / 500; // 500 = amount en mm
+          morph.influence = Math.max(0, influence);
         }
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
@@ -128,9 +129,10 @@
           mesh.position.x = mesh.name.includes("Gauche") ? 0 : width / 1000;
 
           // Allongement vertical (Z)
-          setupMorphTarget(mesh, "z", 0); // allongement fictif de 0.5 m
+          setupMorphTarget(mesh, "z");
           const morph = mesh.morphTargetManager.getTarget(0);
-          morph.influence = Math.max(0, (height - base) / 1000);
+          const influence = (height - base) / 500;
+          morph.influence = Math.max(0, influence);
         }
       });
     }
