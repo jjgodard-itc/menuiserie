@@ -120,8 +120,8 @@
 
         if (mesh.name.includes("Gauche") || mesh.name.includes("Droite")) {
           const originalHeight = getMeshHeight(original);
-          const factorY = height / originalHeight;
-          newPositions = newPositions.map((v, i) => (i % 3 === 1 ? v * factorY : v));
+          const factorZ = height / originalHeight;
+          newPositions = newPositions.map((v, i) => (i % 3 === 1 ? v * factorZ : v));
         }
 
         mesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, newPositions, true);
@@ -166,13 +166,13 @@
     }
 
     function getMeshHeight(positions) {
-      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
       for (let i = 0; i < positions.length; i += 3) {
-        const y = positions[i + 1];
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
+        const z = positions[i + 1];
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
       }
-      return (maxY - minY) * 1000;
+      return (maxZ - minZ) * 1000;
     }
 
     engine.runRenderLoop(() => {
