@@ -60,8 +60,8 @@
     function createMorphTarget(amount) {
       const newPositions = originalPositions.slice();
       for (let i = 0; i < originalPositions.length; i += 3) {
-        // Application d'un changement sur l'axe X
-        newPositions[i] += amount;
+        // Application d'un changement plus visible sur l'axe X (par exemple, multiplier par 2)
+        newPositions[i] += amount * 2; // Augmentation de l'amplitude de la déformation
       }
 
       const morph = new BABYLON.MorphTarget("morph", 1.0, scene);
@@ -69,7 +69,7 @@
       return morph;
     }
 
-    // Initialisation du morph target avec un changement de base (par exemple 0.5)
+    // Initialisation du morph target avec un changement plus grand
     const morphTarget = createMorphTarget(0.5);
     morphTargetManager.addTarget(morphTarget);
 
