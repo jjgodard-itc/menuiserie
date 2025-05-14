@@ -96,19 +96,19 @@
       "Ral 9010": new BABYLON.Color3.FromHexString("#FFFFFF")
     };
 
-    function createMaterial(selectedColor, scene) {
+    function createMaterial(selectedColor, scene, isHorizontal = false) {
 	  if (selectedColor === "Chêne") {
 		const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
-		const woodTexture = new BABYLON.Texture("./chene_clair.jpg", scene);
-		
-		// Rotation de la texture de 90° si nécessaire (PI/2 radians)
-		woodTexture.uAng = Math.PI / 2;
+		const texture = new BABYLON.Texture("./chene_clair.jpg", scene);
+		texture.uScale = 1;
+		texture.vScale = 1;
 
-		// Ajustement de l’échelle pour éviter la pixellisation si nécessaire
-		woodTexture.uScale = 1;
-		woodTexture.vScale = 1;
+		// Appliquer une rotation si horizontal
+		if (isHorizontal) {
+		  texture.wAng = Math.PI / 2; // Rotation de 90° (fil du bois horizontal)
+		}
 
-		woodMat.diffuseTexture = woodTexture;
+		woodMat.diffuseTexture = texture;
 		woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
 		woodMat.backFaceCulling = false;
 		return woodMat;
