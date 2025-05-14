@@ -169,7 +169,7 @@
 	}
 
 
-    function createOuterFrame(width, height, profileSize, scene, material) {
+    function createOuterFrame(width, height, profileSize, scene, baseColor) {
       const outerFrame = new BABYLON.TransformNode("outerFrame", scene);
 	  const montantMat = createMaterial(baseColor, scene, false);
 	  const traverseMat = createMaterial(baseColor, scene, true);
@@ -205,7 +205,7 @@
       return outerFrame;
     }
 
-    function createMeneau(width, height, position, scene, material) {
+    function createMeneau(width, height, position, scene, baseColor) {
       const meneau = BABYLON.MeshBuilder.CreateBox("meneau", {
         width: width,
         height: height,
@@ -219,7 +219,7 @@
       return meneau;
     }
 	
-	function createHorizontalMeneau(width, height, y, scene, material) {
+	function createHorizontalMeneau(width, height, y, scene, baseColor) {
   const meneau = BABYLON.MeshBuilder.CreateBox("meneauHorizontal", {
     width: width,
     height: height,
@@ -232,7 +232,7 @@
   return meneau;
 }
 
-    function createAllege(width, height, scene, material) {
+    function createAllege(width, height, scene, baseColor) {
       const allege = BABYLON.MeshBuilder.CreateBox("allege", { width, height, depth: 0.05 }, scene);
 	  const traverseMat = createMaterial(baseColor, scene, true);
       allege.material = traverseMat;
@@ -240,7 +240,7 @@
       return allege;
     }
 
-    function createImposte(width, height, scene, material) {
+    function createImposte(width, height, scene, baseColor) {
       const imposte = BABYLON.MeshBuilder.CreateBox("imposte", { width, height, depth: 0.05 }, scene);
 	  const traverseMat = createMaterial(baseColor, scene, true);
       imposte.material = traverseMat;
@@ -315,7 +315,7 @@ if (imposteHeight > 0) {
 // Meneau entre allège et vantaux
 if (allegeHeight > 0) {
   const yMeneauAllege = -height / 2 + allegeHeight + verticalSpacing / 2;
-  const meneau = createHorizontalMeneau(width, 0.05, yMeneauAllege, scene, material);
+  const meneau = createHorizontalMeneau(width, 0.05, yMeneauAllege, scene, baseColor);
   meneau.parent = outerFrame;
   meneaux.push(meneau);
 }
@@ -323,7 +323,7 @@ if (allegeHeight > 0) {
 // Meneau entre vantaux et imposte
 if (imposteHeight > 0) {
   const yMeneauImposte = height / 2 - imposteHeight - verticalSpacing / 2;
-  const meneau = createHorizontalMeneau(width, 0.05, yMeneauImposte, scene, material);
+  const meneau = createHorizontalMeneau(width, 0.05, yMeneauImposte, scene, baseColor);
   meneau.parent = outerFrame;
   meneaux.push(meneau);
 }
