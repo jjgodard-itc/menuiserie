@@ -112,7 +112,8 @@
 		woodMat.backFaceCulling = false;
 		return woodMat;
 	  } else {
-		const mat = new BABYLON.StandardMaterial("mat_" + selectedColor.replace(/\s+/g, "") + "_" + Date.now(), scene);
+		const colorString = typeof selectedColor === "string" ? selectedColor : "#ffffff"; // fallback si non string
+		const mat = new BABYLON.StandardMaterial("mat_" + colorString.replace(/\s+/g, "") + "_" + Date.now(), scene);
 		mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
 		mat.specularColor = new BABYLON.Color3(0, 0, 0);
 		return mat;
