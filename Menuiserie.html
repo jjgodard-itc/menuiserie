@@ -121,49 +121,53 @@
 	}
 
 
-    function createFrame(width, height, profileSize, scene, material, vitrage) {
-      const frame = new BABYLON.TransformNode("frame", scene);
+    function createFrame(width, height, profileSize, scene, baseColor, vitrage) {
+	  const frame = new BABYLON.TransformNode("frame", scene);
 
-      const vitrageMat = new BABYLON.StandardMaterial("vitrageMat", scene);
-      vitrageMat.alpha = 0.3;
-      vitrageMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1);
-      vitrageMat.backFaceCulling = false;
+	  const montantMat = createMaterial(baseColor, scene, false);
+	  const traverseMat = createMaterial(baseColor, scene, true);
 
-      for (let i = -1; i <= 1; i += 2) {
-        const montant = BABYLON.MeshBuilder.CreateBox("montant", {
-          width: profileSize,
-          height: height,
-          depth: profileSize
-        }, scene);
-        montant.material = material;
-        montant.position.x = i * (width / 2 - profileSize / 2);
-        montant.receiveShadows = true;
-        montant.castShadows = true;
-        montant.parent = frame;
-      }
+	  const vitrageMat = new BABYLON.StandardMaterial("vitrageMat", scene);
+	  vitrageMat.alpha = 0.3;
+	  vitrageMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1);
+	  vitrageMat.backFaceCulling = false;
 
-      for (let i = -1; i <= 1; i += 2) {
-        const traverse = BABYLON.MeshBuilder.CreateBox("traverse", {
-          width: width,
-          height: profileSize,
-          depth: profileSize
-        }, scene);
-        traverse.material = material;
-        traverse.position.y = i * (height / 2 - profileSize / 2);
-        traverse.receiveShadows = true;
-        traverse.castShadows = true;
-        traverse.parent = frame;
-      }
+	  for (let i = -1; i <= 1; i += 2) {
+		const montant = BABYLON.MeshBuilder.CreateBox("montant", {
+		  width: profileSize,
+		  height: height,
+		  depth: profileSize
+		}, scene);
+		montant.material = montantMat;
+		montant.position.x = i * (width / 2 - profileSize / 2);
+		montant.receiveShadows = true;
+		montant.castShadows = true;
+		montant.parent = frame;
+	  }
 
-      if (vitrage) {
-        const vitrageMesh = BABYLON.MeshBuilder.CreatePlane("vitrage", { width: width - 0.1, height: height - 0.1 }, scene);
-        vitrageMesh.material = vitrageMat;
-        vitrageMesh.position.z = profileSize / 2 -0.02;
-        vitrageMesh.parent = frame;
-      }
+	  for (let i = -1; i <= 1; i += 2) {
+		const traverse = BABYLON.MeshBuilder.CreateBox("traverse", {
+		  width: width,
+		  height: profileSize,
+		  depth: profileSize
+		}, scene);
+		traverse.material = traverseMat;
+		traverse.position.y = i * (height / 2 - profileSize / 2);
+		traverse.receiveShadows = true;
+		traverse.castShadows = true;
+		traverse.parent = frame;
+	  }
 
-      return frame;
-    }
+	  if (vitrage) {
+		const vitrageMesh = BABYLON.MeshBuilder.CreatePlane("vitrage", { width: width - 0.1, height: height - 0.1 }, scene);
+		vitrageMesh.material = vitrageMat;
+		vitrageMesh.position.z = profileSize / 2 - 0.02;
+		vitrageMesh.parent = frame;
+	  }
+
+	  return frame;
+	}
+
 
     function createOuterFrame(width, height, profileSize, scene, material) {
       const outerFrame = new BABYLON.TransformNode("outerFrame", scene);
