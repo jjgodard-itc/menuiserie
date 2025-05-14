@@ -98,14 +98,13 @@
 
     function createMaterial(selectedColor, scene, isHorizontal = false) {
 	  if (selectedColor === "Chêne") {
-		const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
+		const woodMat = new BABYLON.StandardMaterial("woodMat_" + (isHorizontal ? "H" : "V") + "_" + Date.now(), scene);
 		const texture = new BABYLON.Texture("./chene_clair.jpg", scene);
 		texture.uScale = 1;
 		texture.vScale = 1;
 
-		// Appliquer une rotation si horizontal
 		if (isHorizontal) {
-		  texture.wAng = Math.PI / 2; // Rotation de 90° (fil du bois horizontal)
+		  texture.wAng = Math.PI / 2;
 		}
 
 		woodMat.diffuseTexture = texture;
@@ -113,7 +112,7 @@
 		woodMat.backFaceCulling = false;
 		return woodMat;
 	  } else {
-		const mat = new BABYLON.StandardMaterial("mat", scene);
+		const mat = new BABYLON.StandardMaterial("mat_" + selectedColor.replace(/\s+/g, "") + "_" + Date.now(), scene);
 		mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
 		mat.specularColor = new BABYLON.Color3(0, 0, 0);
 		return mat;
@@ -254,7 +253,8 @@
 
     function updateWindow() {
 	
-	 const addAllege = document.getElementById("addAllege").checked;
+	  document.getElementById("couleur").addEventListener("change", updateWindow);
+	  const addAllege = document.getElementById("addAllege").checked;
       const allegeHeightSection = document.getElementById("allegeHeightSection");
       const addImposte = document.getElementById("addImposte").checked;
       const imposteHeightSection = document.getElementById("imposteHeightSection");
