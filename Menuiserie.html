@@ -97,19 +97,29 @@
     };
 
     function createMaterial(selectedColor, scene) {
-      if (selectedColor === "Chêne") {
-        const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
-        woodMat.diffuseTexture = new BABYLON.Texture("./chene_clair.jpg", scene);
-        woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
-        woodMat.backFaceCulling = false;
-        return woodMat;
-      } else {
-        const mat = new BABYLON.StandardMaterial("mat", scene);
-        mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
-        mat.specularColor = new BABYLON.Color3(0, 0, 0);
-        return mat;
-      }
-    }
+	  if (selectedColor === "Chêne") {
+		const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
+		const woodTexture = new BABYLON.Texture("./chene_clair.jpg", scene);
+		
+		// Rotation de la texture de 90° si nécessaire (PI/2 radians)
+		woodTexture.uAng = Math.PI / 2;
+
+		// Ajustement de l’échelle pour éviter la pixellisation si nécessaire
+		woodTexture.uScale = 1;
+		woodTexture.vScale = 1;
+
+		woodMat.diffuseTexture = woodTexture;
+		woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
+		woodMat.backFaceCulling = false;
+		return woodMat;
+	  } else {
+		const mat = new BABYLON.StandardMaterial("mat", scene);
+		mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
+		mat.specularColor = new BABYLON.Color3(0, 0, 0);
+		return mat;
+	  }
+	}
+
 
     function createFrame(width, height, profileSize, scene, material, vitrage) {
       const frame = new BABYLON.TransformNode("frame", scene);
