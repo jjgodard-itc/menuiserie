@@ -96,83 +96,67 @@
       "Ral 9010": new BABYLON.Color3.FromHexString("#FFFFFF")
     };
 
-    function createMaterial(selectedColor, scene, isHorizontal = false) {
-	  if (selectedColor === "Chêne") {
-		const woodMat = new BABYLON.StandardMaterial("woodMat_" + (isHorizontal ? "H" : "V") + "_" + Date.now(), scene);
-		const texture = new BABYLON.Texture("./chene_clair.jpg", scene);
-		texture.uScale = 1;
-		texture.vScale = 1;
+    function createMaterial(selectedColor, scene) {
+      if (selectedColor === "Chêne") {
+        const woodMat = new BABYLON.StandardMaterial("woodMat", scene);
+        woodMat.diffuseTexture = new BABYLON.Texture("C:\Users\JeanJacquesGODARD\Desktop\Test babylon\textures\chene_clair.jpg", scene);
+        woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
+        woodMat.backFaceCulling = false;
+        return woodMat;
+      } else {
+        const mat = new BABYLON.StandardMaterial("mat", scene);
+        mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
+        mat.specularColor = new BABYLON.Color3(0, 0, 0);
+        return mat;
+      }
+    }
 
-		if (isHorizontal) {
-		  texture.wAng = Math.PI / 2;
-		}
+    function createFrame(width, height, profileSize, scene, material, vitrage) {
+      const frame = new BABYLON.TransformNode("frame", scene);
 
-		woodMat.diffuseTexture = texture;
-		woodMat.specularColor = new BABYLON.Color3(0, 0, 0);
-		woodMat.backFaceCulling = false;
-		return woodMat;
-	  } else {
-		const colorString = typeof selectedColor === "string" ? selectedColor : "#ffffff"; // fallback si non string
-		const mat = new BABYLON.StandardMaterial("mat_" + colorString.replace(/\s+/g, "") + "_" + Date.now(), scene);
-		mat.diffuseColor = ralColors[selectedColor] || new BABYLON.Color3(0.3, 0.3, 0.3);
-		mat.specularColor = new BABYLON.Color3(0, 0, 0);
-		return mat;
-	  }
-	}
+      const vitrageMat = new BABYLON.StandardMaterial("vitrageMat", scene);
+      vitrageMat.alpha = 0.3;
+      vitrageMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1);
+      vitrageMat.backFaceCulling = false;
 
+      for (let i = -1; i <= 1; i += 2) {
+        const montant = BABYLON.MeshBuilder.CreateBox("montant", {
+          width: profileSize,
+          height: height,
+          depth: profileSize
+        }, scene);
+        montant.material = material;
+        montant.position.x = i * (width / 2 - profileSize / 2);
+        montant.receiveShadows = true;
+        montant.castShadows = true;
+        montant.parent = frame;
+      }
 
-    function createFrame(width, height, profileSize, scene, baseColor, vitrage) {
-	  const frame = new BABYLON.TransformNode("frame", scene);
+      for (let i = -1; i <= 1; i += 2) {
+        const traverse = BABYLON.MeshBuilder.CreateBox("traverse", {
+          width: width,
+          height: profileSize,
+          depth: profileSize
+        }, scene);
+        traverse.material = material;
+        traverse.position.y = i * (height / 2 - profileSize / 2);
+        traverse.receiveShadows = true;
+        traverse.castShadows = true;
+        traverse.parent = frame;
+      }
 
-	  const montantMat = createMaterial(baseColor, scene, false);
-	  const traverseMat = createMaterial(baseColor, scene, true);
+      if (vitrage) {
+        const vitrageMesh = BABYLON.MeshBuilder.CreatePlane("vitrage", { width: width - 0.1, height: height - 0.1 }, scene);
+        vitrageMesh.material = vitrageMat;
+        vitrageMesh.position.z = profileSize / 2 -0.02;
+        vitrageMesh.parent = frame;
+      }
 
-	  const vitrageMat = new BABYLON.StandardMaterial("vitrageMat", scene);
-	  vitrageMat.alpha = 0.3;
-	  vitrageMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1);
-	  vitrageMat.backFaceCulling = false;
+      return frame;
+    }
 
-	  for (let i = -1; i <= 1; i += 2) {
-		const montant = BABYLON.MeshBuilder.CreateBox("montant", {
-		  width: profileSize,
-		  height: height,
-		  depth: profileSize
-		}, scene);
-		montant.material = montantMat;
-		montant.position.x = i * (width / 2 - profileSize / 2);
-		montant.receiveShadows = true;
-		montant.castShadows = true;
-		montant.parent = frame;
-	  }
-
-	  for (let i = -1; i <= 1; i += 2) {
-		const traverse = BABYLON.MeshBuilder.CreateBox("traverse", {
-		  width: width,
-		  height: profileSize,
-		  depth: profileSize
-		}, scene);
-		traverse.material = traverseMat;
-		traverse.position.y = i * (height / 2 - profileSize / 2);
-		traverse.receiveShadows = true;
-		traverse.castShadows = true;
-		traverse.parent = frame;
-	  }
-
-	  if (vitrage) {
-		const vitrageMesh = BABYLON.MeshBuilder.CreatePlane("vitrage", { width: width - 0.1, height: height - 0.1 }, scene);
-		vitrageMesh.material = vitrageMat;
-		vitrageMesh.position.z = profileSize / 2 - 0.02;
-		vitrageMesh.parent = frame;
-	  }
-
-	  return frame;
-	}
-
-
-    function createOuterFrame(width, height, profileSize, scene, baseColor) {
+    function createOuterFrame(width, height, profileSize, scene, material) {
       const outerFrame = new BABYLON.TransformNode("outerFrame", scene);
-	  const montantMat = createMaterial(baseColor, scene, false);
-	  const traverseMat = createMaterial(baseColor, scene, true);
 
       for (let i = -1; i <= 1; i += 2) {
         const montant = BABYLON.MeshBuilder.CreateBox("montant", {
@@ -180,7 +164,7 @@
           height: height + 0.2,
           depth: profileSize
         }, scene);
-        montant.material = montantMat;
+        montant.material = material;
         montant.position.x = i * (width / 2 + profileSize / 2);
         montant.position.z = 0.05;
         montant.receiveShadows = true;
@@ -194,7 +178,7 @@
           height: profileSize,
           depth: profileSize
         }, scene);
-        traverse.material = traverseMat;
+        traverse.material = material;
         traverse.position.y = i * (height / 2 + profileSize / 2);
         traverse.position.z = 0.05;
         traverse.receiveShadows = true;
@@ -205,45 +189,40 @@
       return outerFrame;
     }
 
-    function createMeneau(width, height, position, scene, baseColor) {
+    function createMeneau(width, height, position, scene, material) {
       const meneau = BABYLON.MeshBuilder.CreateBox("meneau", {
         width: width,
         height: height,
         depth: 0.1
       }, scene);
-	  const traverseMat = createMaterial(baseColor, scene, true);
-	  
-      meneau.material = traverseMat;
+      meneau.material = material;
       meneau.position.x = position;
       meneau.position.z = 0.05;
       return meneau;
     }
 	
-	function createHorizontalMeneau(width, height, y, scene, baseColor) {
+	function createHorizontalMeneau(width, height, y, scene, material) {
   const meneau = BABYLON.MeshBuilder.CreateBox("meneauHorizontal", {
     width: width,
     height: height,
     depth: 0.1
   }, scene);
-  const montantMat = createMaterial(baseColor, scene, false);
-  meneau.material = montantMat;
+  meneau.material = material;
   meneau.position.y = y;
   meneau.position.z = 0.05;
   return meneau;
 }
 
-    function createAllege(width, height, scene, baseColor) {
+    function createAllege(width, height, scene, material) {
       const allege = BABYLON.MeshBuilder.CreateBox("allege", { width, height, depth: 0.05 }, scene);
-	  const traverseMat = createMaterial(baseColor, scene, true);
-      allege.material = traverseMat;
+      allege.material = material;
       allege.position.z = 0.05;
       return allege;
     }
 
-    function createImposte(width, height, scene, baseColor) {
+    function createImposte(width, height, scene, material) {
       const imposte = BABYLON.MeshBuilder.CreateBox("imposte", { width, height, depth: 0.05 }, scene);
-	  const traverseMat = createMaterial(baseColor, scene, true);
-      imposte.material = traverseMat;
+      imposte.material = material;
       imposte.position.z = 0.05;
       return imposte;
     }
@@ -254,8 +233,7 @@
 
     function updateWindow() {
 	
-	  document.getElementById("couleur").addEventListener("change", updateWindow);
-	  const addAllege = document.getElementById("addAllege").checked;
+	 const addAllege = document.getElementById("addAllege").checked;
       const allegeHeightSection = document.getElementById("allegeHeightSection");
       const addImposte = document.getElementById("addImposte").checked;
       const imposteHeightSection = document.getElementById("imposteHeightSection");
@@ -316,7 +294,7 @@ if (imposteHeight > 0) {
 // Meneau entre allège et vantaux
 if (allegeHeight > 0) {
   const yMeneauAllege = -height / 2 + allegeHeight + verticalSpacing / 2;
-  const meneau = createHorizontalMeneau(width, 0.05, yMeneauAllege, scene, baseColor);
+  const meneau = createHorizontalMeneau(width, 0.05, yMeneauAllege, scene, material);
   meneau.parent = outerFrame;
   meneaux.push(meneau);
 }
@@ -324,7 +302,7 @@ if (allegeHeight > 0) {
 // Meneau entre vantaux et imposte
 if (imposteHeight > 0) {
   const yMeneauImposte = height / 2 - imposteHeight - verticalSpacing / 2;
-  const meneau = createHorizontalMeneau(width, 0.05, yMeneauImposte, scene, baseColor);
+  const meneau = createHorizontalMeneau(width, 0.05, yMeneauImposte, scene, material);
   meneau.parent = outerFrame;
   meneaux.push(meneau);
 }
