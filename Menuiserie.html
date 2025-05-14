@@ -171,6 +171,8 @@
 
     function createOuterFrame(width, height, profileSize, scene, material) {
       const outerFrame = new BABYLON.TransformNode("outerFrame", scene);
+	  const montantMat = createMaterial(baseColor, scene, false);
+	  const traverseMat = createMaterial(baseColor, scene, true);
 
       for (let i = -1; i <= 1; i += 2) {
         const montant = BABYLON.MeshBuilder.CreateBox("montant", {
@@ -178,7 +180,7 @@
           height: height + 0.2,
           depth: profileSize
         }, scene);
-        montant.material = material;
+        montant.material = montantMat;
         montant.position.x = i * (width / 2 + profileSize / 2);
         montant.position.z = 0.05;
         montant.receiveShadows = true;
@@ -192,7 +194,7 @@
           height: profileSize,
           depth: profileSize
         }, scene);
-        traverse.material = material;
+        traverse.material = traverseMat;
         traverse.position.y = i * (height / 2 + profileSize / 2);
         traverse.position.z = 0.05;
         traverse.receiveShadows = true;
@@ -209,7 +211,9 @@
         height: height,
         depth: 0.1
       }, scene);
-      meneau.material = material;
+	  const traverseMat = createMaterial(baseColor, scene, true);
+	  
+      meneau.material = traverseMat;
       meneau.position.x = position;
       meneau.position.z = 0.05;
       return meneau;
@@ -221,7 +225,8 @@
     height: height,
     depth: 0.1
   }, scene);
-  meneau.material = material;
+  const montantMat = createMaterial(baseColor, scene, false);
+  meneau.material = montantMat;
   meneau.position.y = y;
   meneau.position.z = 0.05;
   return meneau;
@@ -229,14 +234,16 @@
 
     function createAllege(width, height, scene, material) {
       const allege = BABYLON.MeshBuilder.CreateBox("allege", { width, height, depth: 0.05 }, scene);
-      allege.material = material;
+	  const traverseMat = createMaterial(baseColor, scene, true);
+      allege.material = traverseMat;
       allege.position.z = 0.05;
       return allege;
     }
 
     function createImposte(width, height, scene, material) {
       const imposte = BABYLON.MeshBuilder.CreateBox("imposte", { width, height, depth: 0.05 }, scene);
-      imposte.material = material;
+	  const traverseMat = createMaterial(baseColor, scene, true);
+      imposte.material = traverseMat;
       imposte.position.z = 0.05;
       return imposte;
     }
