@@ -41,7 +41,7 @@
             const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
             plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
-            mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
+            mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
             mat.diffuseTexture.updateSamplingMode(BABYLON.Texture.TRILINEAR_SAMPLINGMODE);
             mat.specularColor = new BABYLON.Color3(0, 0, 0);
             plane.material = mat;
