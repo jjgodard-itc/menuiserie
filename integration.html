@@ -23,67 +23,68 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
-        let model;  // variable globale pour l'objet
+        let armoireRoot;  // TransformNode parent global
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
-			
             scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
             // Caméra avec position fixe
-			const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2 + Math.PI, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2 + Math.PI, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-			//camera.lowerRadiusLimit = camera.upperRadiusLimit = camera.radius; // pas de zoom
-			camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;       // pas de rotation verticale
-			camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;    // pas de rotation horizontale
-			camera.panningSensibility = 0;
-			
-			camera.lowerRadiusLimit = 2;   // zoom minimum (plus proche)
-			camera.upperRadiusLimit = 10;  // zoom maximum (plus éloigné)
+            camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;       // pas de rotation verticale
+            camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;    // pas de rotation horizontale
+            camera.panningSensibility = 0;
+            camera.lowerRadiusLimit = 2;   // zoom minimum (plus proche)
+            camera.upperRadiusLimit = 10;  // zoom maximum (plus éloigné)
 
             // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2;
 
-            // Plan avec la photo en arrière-plan
+            // Plan arrière-plan avec texture
             const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
             plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
-			mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
+            mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
+            mat.diffuseTexture.updateSamplingMode(BABYLON.Texture.TRILINEAR_SAMPLINGMODE);
+            mat.specularColor = new BABYLON.Color3(0, 0, 0);
+            plane.material = mat;
 
-			// Améliorer le filtrage des textures (lissage)
-			mat.diffuseTexture.updateSamplingMode(BABYLON.Texture.TRILINEAR_SAMPLINGMODE);
-
-			// Pour éviter les reflets trop brillants
-			mat.specularColor = new BABYLON.Color3(0, 0, 0);
-
-			// Optionnel : ajouter un effet de lissage des normales pour mieux gérer la lumière
-			mat.useNormalMapFromAlpha = true;  // si tu as une texture alpha normale
-
-			// Appliquer le matériau au plan
-			plane.material = mat;
+            // *** Avant chargement, mémoriser les meshes existants ***
+            const existingMeshes = scene.meshes.slice();
 
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                model = scene.meshes.slice(-1)[0];
-                model.position = new BABYLON.Vector3(-1.5, 0, 0.5);
-                model.scaling = new BABYLON.Vector3(1, 1, 1);
-                model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+                // Détecter les nouveaux meshes ajoutés
+                const newMeshes = scene.meshes.filter(m => !existingMeshes.includes(m));
 
-                // Activer drag sur le modèle
-                enableDragOnModel(scene, camera, model);
+                // Créer un TransformNode parent
+                armoireRoot = new BABYLON.TransformNode("armoireRoot", scene);
+
+                // Attacher tous les nouveaux meshes au parent
+                newMeshes.forEach(mesh => {
+                    mesh.parent = armoireRoot;
+                });
+
+                // Positionner et orienter le parent globalement
+                armoireRoot.position = new BABYLON.Vector3(-1.5, 0, 0.5);
+                armoireRoot.scaling = new BABYLON.Vector3(1, 1, 1);
+                armoireRoot.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+
+                // Activer drag sur le parent (toute l’armoire)
+                enableDragOnModel(scene, camera, armoireRoot);
             });
 
             return scene;
         };
 
-        // Fonction drag simple sur le modèle
+        // Fonction drag simple sur un mesh ou TransformNode
         function enableDragOnModel(scene, camera, mesh) {
             let startingPoint;
             let currentMesh = null;
 
             const getGroundPosition = () => {
-                // On projette le ray sur un plan parallèle au plan XY à hauteur 0 (y=0)
                 const pickinfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
                 if (pickinfo.hit) {
                     return pickinfo.pickedPoint;
@@ -98,7 +99,6 @@
                     currentMesh = mesh;
                     startingPoint = pickInfo.pickedPoint;
                     canvas.style.cursor = 'grabbing';
-                    // Désactiver contrôle caméra pendant drag
                     camera.detachControl(canvas);
                 }
             };
@@ -108,7 +108,6 @@
                     currentMesh = null;
                     startingPoint = null;
                     canvas.style.cursor = 'default';
-                    // Réactiver contrôle caméra
                     camera.attachControl(canvas, true);
                 }
             };
@@ -122,7 +121,6 @@
                 const current = pickInfo.pickedPoint;
                 if (!current) return;
 
-                // Calcul du déplacement
                 const diff = current.subtract(startingPoint);
                 mesh.position.addInPlace(diff);
 
