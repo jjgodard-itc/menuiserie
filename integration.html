@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Chambre avec meuble 3D</title>
+    <style>
+        html, body { 
+            width: 100%; height: 100%; margin: 0; overflow: hidden; 
+        }
+        #renderCanvas {
+            width: 100%; height: 100%;
+            display: block;
+            background: url('images.jpg') no-repeat center center;
+            background-size: cover;
+        }
+    </style>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Lumière basique
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 0.8;
+
+            // Caméra orthographique pour "coller" à l'image (tu peux passer en perspective aussi)
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 5, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            // Chargement du modèle GLB
+            BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function (scene) {
+                const model = scene.meshes.slice(-1)[0]; // prendre dernier mesh importé
+
+                // Positionner le meuble approximativement (à ajuster)
+                model.position = new BABYLON.Vector3(-1.5, 0, 0);
+                model.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
+                model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
