@@ -43,12 +43,35 @@
             light.intensity = 2;
 
             // Plan avec la photo en arrière-plan
-            const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
+            const canvasWidth = engine.getRenderWidth();
+			const canvasHeight = engine.getRenderHeight();
+
+			// Calcul du ratio
+			const ratio = canvasWidth / canvasHeight;
+
+			// Choisir une hauteur fixe (exemple)
+			const planeHeight = 6;
+
+			// Calcul de la largeur selon le ratio
+			const planeWidth = planeHeight * ratio;
+
+			// Créer le plan avec ces dimensions
+			const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: planeWidth, height: planeHeight}, scene);
             plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
-            mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
-            mat.specularColor = new BABYLON.Color3(0,0,0);
-            plane.material = mat;
+			mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
+
+			// Améliorer le filtrage des textures (lissage)
+			mat.diffuseTexture.updateSamplingMode(BABYLON.Texture.TRILINEAR_SAMPLINGMODE);
+
+			// Pour éviter les reflets trop brillants
+			mat.specularColor = new BABYLON.Color3(0, 0, 0);
+
+			// Optionnel : ajouter un effet de lissage des normales pour mieux gérer la lumière
+			mat.useNormalMapFromAlpha = true;  // si tu as une texture alpha normale
+
+			// Appliquer le matériau au plan
+			plane.material = mat;
 
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
