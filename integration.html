@@ -53,14 +53,14 @@
 
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-			const root = scene.getTransformNodeByName("__root__") || scene.getTransformNodeByName("Scene") || scene.meshes[0];
+                model = scene.meshes.slice(-1)[0];
+                model.position = new BABYLON.Vector3(-1.5, 0, 0.5);
+                model.scaling = new BABYLON.Vector3(1, 1, 1);
+                model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
 
-			root.position = new BABYLON.Vector3(0, 2, 0.5);
-			root.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
-			root.scaling = new BABYLON.Vector3(1, 1, 1);
-
-			enableDragOnModel(scene, camera, root);
-		});
+                // Activer drag sur le modèle
+                enableDragOnModel(scene, camera, model);
+            });
 
             return scene;
         };
