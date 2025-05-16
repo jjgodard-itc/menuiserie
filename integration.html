@@ -23,8 +23,12 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
+        let model;  // variable globale pour l'objet
+
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
+			
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
             // Caméra avec position fixe
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
@@ -44,14 +48,75 @@
 
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                const model = scene.meshes.slice(-1)[0];
-                model.position = new BABYLON.Vector3(-1.5, 0, 0.5); // placer devant le plan (z=0.5 > -3)
+                model = scene.meshes.slice(-1)[0];
+                model.position = new BABYLON.Vector3(-1.5, 0, 0.5);
                 model.scaling = new BABYLON.Vector3(1, 1, 1);
                 model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+
+                // Activer drag sur le modèle
+                enableDragOnModel(scene, camera, model);
             });
 
             return scene;
         };
+
+        // Fonction drag simple sur le modèle
+        function enableDragOnModel(scene, camera, mesh) {
+            let startingPoint;
+            let currentMesh = null;
+
+            const getGroundPosition = () => {
+                // On projette le ray sur un plan parallèle au plan XY à hauteur 0 (y=0)
+                const pickinfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
+                if (pickinfo.hit) {
+                    return pickinfo.pickedPoint;
+                }
+                return null;
+            };
+
+            const pointerDown = (evt) => {
+                if (evt.button !== 0) return; // clic gauche uniquement
+                const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
+                if (pickInfo.hit) {
+                    currentMesh = mesh;
+                    startingPoint = pickInfo.pickedPoint;
+                    canvas.style.cursor = 'grabbing';
+                    // Désactiver contrôle caméra pendant drag
+                    camera.detachControl(canvas);
+                }
+            };
+
+            const pointerUp = () => {
+                if (currentMesh) {
+                    currentMesh = null;
+                    startingPoint = null;
+                    canvas.style.cursor = 'default';
+                    // Réactiver contrôle caméra
+                    camera.attachControl(canvas, true);
+                }
+            };
+
+            const pointerMove = (evt) => {
+                if (!startingPoint || !currentMesh) return;
+
+                const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
+                if (!pickInfo.hit) return;
+
+                const current = pickInfo.pickedPoint;
+                if (!current) return;
+
+                // Calcul du déplacement
+                const diff = current.subtract(startingPoint);
+                mesh.position.addInPlace(diff);
+
+                startingPoint = current;
+            };
+
+            canvas.addEventListener("pointerdown", pointerDown);
+            canvas.addEventListener("pointerup", pointerUp);
+            canvas.addEventListener("pointerout", pointerUp);
+            canvas.addEventListener("pointermove", pointerMove);
+        }
 
         const scene = createScene();
 
