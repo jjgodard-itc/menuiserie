@@ -48,21 +48,21 @@
 
             const existingMeshes = scene.meshes.slice();
 
+            // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                const newMeshes = scene.meshes.filter(m => !existingMeshes.includes(m));
-                armoireRoot = new BABYLON.TransformNode("armoireRoot", scene);
+                // Récupérer les derniers meshes chargés
+                modelMeshes = scene.meshes.slice(-10);
 
-                newMeshes.forEach(mesh => {
-                    mesh.parent = armoireRoot;
-                });
+                // Créer un parent pour le modèle
+                modelParent = new BABYLON.TransformNode("modelParent", scene);
+                modelMeshes.forEach(m => m.parent = modelParent);
 
-                armoireRoot.position = new BABYLON.Vector3(-1.5, 0, 0.5);
-                armoireRoot.scaling = new BABYLON.Vector3(1, 1, 1);
+                // Position, rotation et échelle du parent
+                modelParent.position = new BABYLON.Vector3(-1.5, 0, 0.5);
+                modelParent.scaling = new BABYLON.Vector3(1, 1, 1);
+                modelParent.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
 
-                // Utilisation de rotationQuaternion au lieu de rotation Euler
-                armoireRoot.rotationQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y, Math.PI / 2);
-
-                enableDragOnModel(scene, camera, armoireRoot);
+                enableDragOnModel(scene, camera, modelParent);
             });
 
             return scene;
