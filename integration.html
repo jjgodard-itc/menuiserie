@@ -52,15 +52,20 @@
 
 
             // Charger le modèle GLB
-            BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                model = scene.meshes.slice(-1)[0];
-                model.position = new BABYLON.Vector3(10, 0, 0.5);
-                model.scaling = new BABYLON.Vector3(1, 1, 1);
-                model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+            BABYLON.SceneLoader.ImportMesh("", "", "DessineTonMeuble.glb", scene, function (meshes, particleSystems, skeletons, animationGroups) {
+			const root = new BABYLON.TransformNode("armoireRoot", scene);
 
-                // Activer drag sur le modèle
-                enableDragOnModel(scene, camera, model);
-            });
+			meshes.forEach(mesh => {
+				mesh.parent = root;
+			});
+
+			// Positionne ici le modèle
+			root.position = new BABYLON.Vector3(10, 0, 0.5);
+			root.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+			root.scaling = new BABYLON.Vector3(1, 1, 1);
+
+			enableDragOnModel(scene, camera, root);
+			});
 
             return scene;
         };
