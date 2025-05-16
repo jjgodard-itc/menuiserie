@@ -37,6 +37,9 @@
 			camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;       // pas de rotation verticale
 			camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;    // pas de rotation horizontale
 			camera.panningSensibility = 0;
+			
+			camera.lowerRadiusLimit = 2;   // zoom minimum (plus proche)
+			camera.upperRadiusLimit = 10;  // zoom maximum (plus éloigné)
 
             // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
