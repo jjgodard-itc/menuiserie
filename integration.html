@@ -33,7 +33,7 @@
             // Caméra avec position fixe
 			const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2 + Math.PI, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-			camera.lowerRadiusLimit = camera.upperRadiusLimit = camera.radius; // pas de zoom
+			//camera.lowerRadiusLimit = camera.upperRadiusLimit = camera.radius; // pas de zoom
 			camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;       // pas de rotation verticale
 			camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;    // pas de rotation horizontale
 			camera.panningSensibility = 0;
