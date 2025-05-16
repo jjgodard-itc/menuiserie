@@ -31,9 +31,9 @@
 
             scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-            // Caméra figée (attachControl avec false pour désactiver contrôle utilisateur)
+            // Caméra inversée horizontalement (alpha + PI)
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2 + Math.PI, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, false);  // <-- ici la caméra est figée
+            camera.attachControl(canvas, true);
 
             // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -49,7 +49,7 @@
 
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                // Récupérer les derniers meshes chargés
+                // On récupère les derniers meshes (adapter si besoin)
                 modelMeshes = scene.meshes.slice(-10);
 
                 // Créer un parent pour le modèle
@@ -67,7 +67,7 @@
             return scene;
         };
 
-        // Fonction pour déplacer le modèle par clic-glisser
+        // Fonction de drag sur le modèle
         function enableDragOnModel(scene, camera, meshParent) {
             let startingPoint;
             let currentMesh = null;
@@ -79,7 +79,7 @@
                     currentMesh = meshParent;
                     startingPoint = pickInfo.pickedPoint;
                     canvas.style.cursor = 'grabbing';
-                    // Pendant le drag, on ne permet pas de bouger la caméra (donc on ne détache pas le contrôle)
+                    camera.detachControl(canvas);
                 }
             };
 
@@ -88,6 +88,7 @@
                     currentMesh = null;
                     startingPoint = null;
                     canvas.style.cursor = 'default';
+                    camera.attachControl(canvas, true);
                 }
             };
 
@@ -95,7 +96,7 @@
                 if (!startingPoint || !currentMesh) return;
 
                 const pickInfo = scene.pick(scene.pointerX, scene.pointerY);
-                if (!pickInfo.hit) return;
+                if (!pickInfo.hit || !modelMeshes.includes(pickInfo.pickedMesh)) return;
 
                 const current = pickInfo.pickedPoint;
                 if (!current) return;
