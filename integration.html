@@ -32,11 +32,11 @@
 
             // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 0.8;
+            light.intensity = 2;
 
             // Plan avec la photo en arrière-plan
             const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
-            plane.position.z = -3;
+            plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
             mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
             mat.specularColor = new BABYLON.Color3(0,0,0);
