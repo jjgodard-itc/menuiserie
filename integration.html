@@ -10,7 +10,7 @@
         #renderCanvas {
             width: 100%; height: 100%;
             display: block;
-            background-color: #000000; /* noir si image pas chargée */
+            background-color: #000000;
         }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -29,20 +29,15 @@
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-            // Caméra avec position fixe
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2 + Math.PI, Math.PI / 2.5, 6, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;       // pas de rotation verticale
-            camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;    // pas de rotation horizontale
+            camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
+            camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
             camera.panningSensibility = 0;
-           // camera.lowerRadiusLimit = 2;   // zoom minimum (plus proche)
-           // camera.upperRadiusLimit = 20;  // zoom maximum (plus éloigné)
 
-            // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2;
 
-            // Plan arrière-plan avec texture
             const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
             plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
@@ -51,41 +46,44 @@
             mat.specularColor = new BABYLON.Color3(0, 0, 0);
             plane.material = mat;
 
-            // *** Avant chargement, mémoriser les meshes existants ***
             const existingMeshes = scene.meshes.slice();
 
-            // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                // Détecter les nouveaux meshes ajoutés
                 const newMeshes = scene.meshes.filter(m => !existingMeshes.includes(m));
-
-                // Créer un TransformNode parent
                 armoireRoot = new BABYLON.TransformNode("armoireRoot", scene);
 
-                // Attacher tous les nouveaux meshes au parent
                 newMeshes.forEach(mesh => {
                     mesh.parent = armoireRoot;
                 });
 
-                // Positionner et orienter le parent globalement
                 armoireRoot.position = new BABYLON.Vector3(-1.5, 0, 0.5);
                 armoireRoot.scaling = new BABYLON.Vector3(1, 1, 1);
-                armoireRoot.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
 
-                // Activer drag sur le parent (toute l’armoire)
+                // Utilisation de rotationQuaternion au lieu de rotation Euler
+                armoireRoot.rotationQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y, Math.PI / 2);
+
                 enableDragOnModel(scene, camera, armoireRoot);
             });
 
             return scene;
         };
 
-        // Fonction drag simple sur un mesh ou TransformNode
         function enableDragOnModel(scene, camera, mesh) {
             let startingPoint;
             let currentMesh = null;
 
+            // Fonction modifiée pour tester la hiérarchie complète (mesh + descendants)
+            const isMeshOrChildOf = (m, parentNode) => {
+                let current = m;
+                while (current) {
+                    if (current === parentNode) return true;
+                    current = current.parent;
+                }
+                return false;
+            };
+
             const getGroundPosition = () => {
-                const pickinfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
+                const pickinfo = scene.pick(scene.pointerX, scene.pointerY, (m) => isMeshOrChildOf(m, mesh));
                 if (pickinfo.hit) {
                     return pickinfo.pickedPoint;
                 }
@@ -93,8 +91,8 @@
             };
 
             const pointerDown = (evt) => {
-                if (evt.button !== 0) return; // clic gauche uniquement
-                const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
+                if (evt.button !== 0) return;
+                const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => isMeshOrChildOf(m, mesh));
                 if (pickInfo.hit) {
                     currentMesh = mesh;
                     startingPoint = pickInfo.pickedPoint;
@@ -114,16 +112,10 @@
 
             const pointerMove = (evt) => {
                 if (!startingPoint || !currentMesh) return;
-
-                const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => m === mesh);
-                if (!pickInfo.hit) return;
-
-                const current = pickInfo.pickedPoint;
+                const current = getGroundPosition();
                 if (!current) return;
-
                 const diff = current.subtract(startingPoint);
                 mesh.position.addInPlace(diff);
-
                 startingPoint = current;
             };
 
