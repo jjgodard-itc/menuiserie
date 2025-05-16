@@ -46,23 +46,15 @@
             mat.specularColor = new BABYLON.Color3(0, 0, 0);
             plane.material = mat;
 
-            const existingMeshes = scene.meshes.slice();
-
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
-                // Récupérer les derniers meshes chargés
-                modelMeshes = scene.meshes.slice(-10);
+                model = scene.meshes.slice(-1)[0];
+                model.position = new BABYLON.Vector3(-1.5, 0, 0.5);
+                model.scaling = new BABYLON.Vector3(1, 1, 1);
+                model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
 
-                // Créer un parent pour le modèle
-                modelParent = new BABYLON.TransformNode("modelParent", scene);
-                modelMeshes.forEach(m => m.parent = modelParent);
-
-                // Position, rotation et échelle du parent
-                modelParent.position = new BABYLON.Vector3(-1.5, 0, 0.5);
-                modelParent.scaling = new BABYLON.Vector3(1, 1, 1);
-                modelParent.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
-
-                enableDragOnModel(scene, camera, modelParent);
+                // Activer drag sur le modèle
+                enableDragOnModel(scene, camera, model);
             });
 
             return scene;
