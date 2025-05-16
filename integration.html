@@ -43,20 +43,7 @@
             light.intensity = 2;
 
             // Plan avec la photo en arrière-plan
-            const canvasWidth = engine.getRenderWidth();
-			const canvasHeight = engine.getRenderHeight();
-
-			// Calcul du ratio
-			const ratio = canvasWidth / canvasHeight;
-
-			// Choisir une hauteur fixe (exemple)
-			const planeHeight = 6;
-
-			// Calcul de la largeur selon le ratio
-			const planeWidth = planeHeight * ratio;
-
-			// Créer le plan avec ces dimensions
-			const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: planeWidth, height: planeHeight}, scene);
+            const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
             plane.position.z = 3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
 			mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
