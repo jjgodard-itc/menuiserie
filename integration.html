@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>Chambre avec meuble 3D</title>
+    <title>Manipulation objet GLB</title>
     <style>
         html, body { 
             width: 100%; height: 100%; margin: 0; overflow: hidden; 
@@ -10,7 +10,13 @@
         #renderCanvas {
             width: 100%; height: 100%;
             display: block;
-            background-color: #000000; /* noir si image pas chargée */
+        }
+        #controls {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -18,35 +24,43 @@
 </head>
 <body>
     <canvas id="renderCanvas"></canvas>
+    <div id="controls">
+        <button id="rotateLeft">Tourner Gauche</button>
+        <button id="rotateRight">Tourner Droite</button>
+    </div>
 
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
+        let model;
+
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
-			scene.clearColor = new BABYLON.Color4(0, 0, 0, 0); // fond transparent
 
-            // Caméra orthographique (ou perspective) avec contrôle
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+            // Caméra fixe, pas de contrôle attaché
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 5, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
+            camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;    // bloque vertical
+            camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha; // bloque horizontal
+            // Ne pas attacher la caméra au canvas => pas de contrôle utilisateur
 
-            // Lumière ambiante
+            // Lumière
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 0.8;
 
-            // Plan large en arrière avec la photo en texture
+            // Plan arrière avec image
             const plane = BABYLON.MeshBuilder.CreatePlane("backgroundPlane", {width: 10, height: 6}, scene);
-            plane.position.z = -3;  // placer derrière
+            plane.position.z = -3;
             const mat = new BABYLON.StandardMaterial("mat", scene);
             mat.diffuseTexture = new BABYLON.Texture("images.jpg", scene);
-            mat.specularColor = new BABYLON.Color3(0,0,0); // pas de reflet
+            mat.specularColor = new BABYLON.Color3(0, 0, 0);
             plane.material = mat;
 
             // Charger le modèle GLB
-            BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function (scene) {
-                const model = scene.meshes.slice(-1)[0];
-
+            BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
+                model = scene.meshes.slice(-1)[0];
                 model.position = new BABYLON.Vector3(-1.5, 0, 0);
                 model.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
                 model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
@@ -56,6 +70,19 @@
         };
 
         const scene = createScene();
+
+        // Boutons pour faire tourner le modèle
+        document.getElementById("rotateLeft").addEventListener("click", () => {
+            if(model) {
+                model.rotation.y -= 0.1;
+            }
+        });
+
+        document.getElementById("rotateRight").addEventListener("click", () => {
+            if(model) {
+                model.rotation.y += 0.1;
+            }
+        });
 
         engine.runRenderLoop(() => {
             scene.render();
