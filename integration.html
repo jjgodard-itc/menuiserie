@@ -54,8 +54,8 @@
             // Charger le modèle GLB
             BABYLON.SceneLoader.Append("", "DessineTonMeuble.glb", scene, function () {
                 model = scene.meshes.slice(-1)[0];
-                model.position = new BABYLON.Vector3(0, 0, 0.5);
-                model.scaling = new BABYLON.Vector3(2, 1, 1);
+                model.position = new BABYLON.Vector3(10, 0, 0.5);
+                model.scaling = new BABYLON.Vector3(1, 1, 1);
                 model.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
 
                 // Activer drag sur le modèle
